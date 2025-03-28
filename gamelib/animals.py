@@ -48,3 +48,11 @@ class Animal:
 class Chicken(Animal):
     def __init__(self, pos, right_images, left_images):
         super().__init__(pos, right_images, left_images, speed=2, health=1)
+
+class Cow(Animal):
+    def __init__(self, pos, right_images, left_images):
+        super().__init__(pos, right_images, left_images, speed=1, health=2)
+
+class Pig(Animal):
+    def __init__(self, pos, right_images, left_images):
+        super().__init__(pos, right_images, left_images, speed=1, health=3)

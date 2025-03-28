@@ -1,6 +1,6 @@
 import pygame
 from gamelib.sprites import Wolf
-from gamelib.animals import Chicken  
+from gamelib.animals import *
 
 pygame.init()
 
@@ -23,19 +23,40 @@ for surf in Wolf.right_images:
     surf.fill((120, 120, 120))
 
 # Chicken sprites
-right_images = [
+right_images_chicken = [
     pygame.image.load("data/Poule1.png").convert_alpha(),
     pygame.image.load("data/Poule2.png").convert_alpha(),
     pygame.image.load("data/Poule3.png").convert_alpha(),
     pygame.image.load("data/Poule4.png").convert_alpha(),
 ]
-left_images = [pygame.transform.flip(img, True, False) for img in right_images]
+left_images_chicken = [pygame.transform.flip(img, True, False) for img in right_images_chicken]
+
+#Cow sprites
+right_images_cow = [
+    pygame.image.load("data/Vache1.png").convert_alpha(),
+    pygame.image.load("data/Vache2.png").convert_alpha(),
+    pygame.image.load("data/Vache3.png").convert_alpha(),
+]
+left_images_cow = [pygame.transform.flip(img, True, False) for img in right_images_cow]
+
+#Pig sprites
+right_images_pig = [
+    pygame.image.load("data/Cochon1.png").convert_alpha(),
+    pygame.image.load("data/Cochon2.png").convert_alpha(),
+    pygame.image.load("data/Cochon3.png").convert_alpha(),
+    pygame.image.load("data/Cochon4.png").convert_alpha(),
+]
+left_images_pig = [pygame.transform.flip(img, True, False) for img in right_images_pig]
 
 # Entities
 wolf = Wolf((150, 700))
 animals = [
-    Chicken((1000, 700), right_images, left_images),
-    Chicken((1500, 700), right_images, left_images)
+    Chicken((1000, 700), right_images_chicken, left_images_chicken),
+    Chicken((1500, 700), right_images_chicken, left_images_chicken),
+    Cow((1200, 700), right_images_cow, left_images_cow),
+    Cow((1700, 700), right_images_cow, left_images_cow),
+    Pig((1300, 700), right_images_pig, left_images_pig),
+    Pig((1900, 700), right_images_pig, left_images_pig),
 ]
 
 # Plateformes
