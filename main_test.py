@@ -1,41 +1,65 @@
 import pygame
 from gamelib.sprites import Wolf
+from gamelib.animals import Chicken  
 
 pygame.init()
-screen = pygame.display.set_mode((800, 600))
+
+# Config 
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+LEVEL_WIDTH = 1900
+LEVEL_HEIGHT = 1000
+camera_offset = 0
+camera_y = LEVEL_HEIGHT - SCREEN_HEIGHT
+CAMERA_MARGIN_Y = 200
+
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bad Wolf – Test Zone")
 clock = pygame.time.Clock()
 
-# Définir des images temporaires
+# Wolf sprites
 Wolf.right_images = [pygame.Surface((50, 50)) for _ in range(6)]
 for surf in Wolf.right_images:
     surf.fill((120, 120, 120))
 
-# Supprimer les appels à load_sound dans Wolf
-Wolf.jump_sound = None
-Wolf.hit_sound = None
-Wolf.spring_sound = None
+# Chicken sprites
+right_images = [
+    pygame.image.load("data/Poule1.png").convert_alpha(),
+    pygame.image.load("data/Poule2.png").convert_alpha(),
+    pygame.image.load("data/Poule3.png").convert_alpha(),
+    pygame.image.load("data/Poule4.png").convert_alpha(),
+]
+left_images = [pygame.transform.flip(img, True, False) for img in right_images]
 
-# Création du loup et des plateformes
-wolf = Wolf((150, 300))
-platforms = [
-    pygame.Rect(100, 500, 300, 30),
-    pygame.Rect(450, 400, 150, 30),
-    pygame.Rect(650, 300, 100, 30)
+# Entities
+wolf = Wolf((150, 700))
+animals = [
+    Chicken((1000, 700), right_images, left_images),
+    Chicken((1500, 700), right_images, left_images)
 ]
 
-# Création d'un ennemi
-enemy = pygame.Rect(400,460,50,50)
-enemy_color = (200,50,50)
+# Plateformes
+platforms = [
+    pygame.Rect(0, 800, 1900, 50),
+    pygame.Rect(200, 700, 120, 20),
+    pygame.Rect(400, 600, 100, 20),
+    pygame.Rect(600, 500, 100, 20),
+    pygame.Rect(850, 700, 150, 20),
+    pygame.Rect(1050, 600, 100, 20),
+    pygame.Rect(1250, 500, 120, 20),
+    pygame.Rect(1450, 400, 120, 20),
+    pygame.Rect(1650, 650, 100, 20),
+    pygame.Rect(1750, 550, 100, 20),
+    pygame.Rect(1800, 450, 80, 20)
+]
 
-# Cœurs de vie (carrés rouges pour l’instant)
+# HUD
 heart_image = pygame.Surface((30, 30))
 heart_image.fill((255, 0, 0))
 
-# Boucle principale
 running = True
 while running:
-    screen.fill((135, 206, 235))  # ciel bleu
+    screen.fill((135, 206, 235))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -43,23 +67,22 @@ while running:
 
     keys = pygame.key.get_pressed()
     dx = 0
-
     if keys[pygame.K_LEFT] or keys[pygame.K_q]:
-        dx = -5
+        dx = -wolf.move_speed
     if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-        dx = 5
+        dx = wolf.move_speed
     if (keys[pygame.K_SPACE] or keys[pygame.K_z] or keys[pygame.K_w] or keys[pygame.K_UP]) and not wolf.jumping:
         wolf.jump()
 
     wolf.move(dx, 0)
-
-    # Appliquer gravité
     wolf.jump_speed += wolf.jump_accel
-    if wolf.jump_speed > 10:
-        wolf.jump_speed = 10
+    if wolf.jump_speed > wolf.max_fall_speed:
+        wolf.jump_speed = wolf.max_fall_speed
     wolf.move(0, wolf.jump_speed)
 
-    # Collision avec plateformes
+
+
+    # Collisions plateformes
     wolf.jumping = True
     for platform in platforms:
         if wolf.rect.colliderect(platform) and wolf.jump_speed >= 0:
@@ -68,32 +91,50 @@ while running:
             wolf.jumping = False
             break
 
-    # Collision avec l’ennemi
-    if wolf.rect.colliderect(enemy):
-        wolf.hit_timer -= 1
-        if wolf.hit_timer <= 0:
-            wolf.hp -= 1
-            wolf.hit_timer = 60  # délai entre 2 dégâts
-            print(f"Ouch ! Il te reste {wolf.hp} cœur(s).")
-            if wolf.hp <= 0:
-                print("Game Over 🐺💀")
-                running = False
-    else:
-        wolf.hit_timer = max(wolf.hit_timer - 1, 0)
+    # Interactions avec animaux
+    for animal in animals:
+        animal.update()
+        if animal.alive and wolf.rect.colliderect(animal.rect):
+            if wolf.rect.bottom <= animal.rect.top + 10 and wolf.jump_speed > 0:
+                animal.take_damage(1)
+                wolf.jump_speed = -8
+            else:
+                if wolf.hit_timer <= 0:
+                    wolf.hp -= 1
+                    wolf.hit_timer = 60
+                    if wolf.hp <= 0:
+                        running = False
+        else:
+            wolf.hit_timer = max(wolf.hit_timer - 1, 0)
 
+    # Scroll horizontal
+    if wolf.rect.right > camera_offset + SCREEN_WIDTH:
+        if camera_offset + SCREEN_WIDTH < LEVEL_WIDTH:
+            camera_offset += SCREEN_WIDTH
+            wolf.rect.left = camera_offset
+    if wolf.rect.left < camera_offset:
+        if camera_offset > 0:
+            camera_offset -= SCREEN_WIDTH
+            wolf.rect.right = camera_offset + SCREEN_WIDTH
 
+    # Scroll vertical
+    if wolf.rect.top < camera_y + CAMERA_MARGIN_Y:
+        camera_y = max(0, wolf.rect.top - CAMERA_MARGIN_Y)
+    elif wolf.rect.bottom > camera_y + SCREEN_HEIGHT - CAMERA_MARGIN_Y:
+        camera_y = min(LEVEL_HEIGHT - SCREEN_HEIGHT, wolf.rect.bottom - SCREEN_HEIGHT + CAMERA_MARGIN_Y)
 
-    # Dessin
+    # DESSIN
     for plat in platforms:
-        pygame.draw.rect(screen, (100, 100, 100), plat)
+        pygame.draw.rect(screen, (100, 100, 100), plat.move(-camera_offset, -camera_y))
+
+    for animal in animals:
+        animal.draw(screen, camera_offset, camera_y)
 
     wolf.update()
-    screen.blit(wolf.image, wolf.rect)
+    screen.blit(wolf.image, wolf.rect.move(-camera_offset, -camera_y))
 
     for i in range(wolf.hp):
         screen.blit(heart_image, (10 + i * 35, 10))
-
-    pygame.draw.rect(screen, enemy_color, enemy)
 
     pygame.display.flip()
     clock.tick(60)
