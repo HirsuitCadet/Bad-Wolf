@@ -17,6 +17,11 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bad Wolf – Test Zone")
 clock = pygame.time.Clock()
 
+#Background
+background_image = pygame.image.load("data/fond_enclos.png").convert()
+background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+
 # Wolf sprites
 Wolf.right_images = [pygame.Surface((50, 50)) for _ in range(6)]
 for surf in Wolf.right_images:
@@ -81,6 +86,7 @@ heart_image.fill((255, 0, 0))
 running = True
 while running:
     screen.fill((135, 206, 235))
+    screen.blit(background_image, (0, 0))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
