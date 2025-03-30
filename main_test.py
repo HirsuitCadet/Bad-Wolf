@@ -105,18 +105,20 @@ while running:
     wolf.jump_speed += wolf.jump_accel
     if wolf.jump_speed > wolf.max_fall_speed:
         wolf.jump_speed = wolf.max_fall_speed
+    # Variable utilisée pour régler la "téléportation" sur une plateforme
+    previous_bottom = wolf.rect.bottom
     wolf.move(0, wolf.jump_speed)
-
-
 
     # Collisions plateformes
     wolf.jumping = True
     for platform in platforms:
-        if wolf.rect.colliderect(platform) and wolf.jump_speed >= 0:
-            wolf.rect.bottom = platform.top
-            wolf.jump_speed = 0
-            wolf.jumping = False
-            break
+        if wolf.rect.colliderect(platform):
+            # Collision par le haut seulement
+            if wolf.jump_speed > 0 and previous_bottom <= platform.top:
+                wolf.rect.bottom = platform.top
+                wolf.jump_speed = 0
+                wolf.jumping = False
+                break
 
     # Interactions avec animaux
     for animal in animals:
@@ -128,7 +130,7 @@ while running:
             else:
                 if wolf.hit_timer <= 0:
                     wolf.hp -= 1
-                    wolf.hit_timer = 60
+                    wolf.hit_timer = 120
                     if wolf.hp <= 0:
                         running = False
         else:
