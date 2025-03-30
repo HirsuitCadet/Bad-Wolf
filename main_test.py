@@ -21,11 +21,21 @@ clock = pygame.time.Clock()
 background_image = pygame.image.load("data/fond_enclos.png").convert()
 background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-
 # Wolf sprites
-Wolf.right_images = [pygame.Surface((50, 50)) for _ in range(6)]
-for surf in Wolf.right_images:
-    surf.fill((120, 120, 120))
+right_images_wolf = [
+    pygame.image.load("data/Loup1.png").convert_alpha(),
+    pygame.image.load("data/Loup2.png").convert_alpha(),
+    pygame.image.load("data/Loup3.png").convert_alpha(),
+    pygame.image.load("data/Loup4.png").convert_alpha(),
+    pygame.image.load("data/Loup5.png").convert_alpha(),
+    pygame.image.load("data/Loup6.png").convert_alpha(),
+    pygame.image.load("data/Loup7.png").convert_alpha(),
+    pygame.image.load("data/Loup8.png").convert_alpha(),
+]
+left_images_wolf = [pygame.transform.flip(img, True, False) for img in right_images_wolf]
+
+Wolf.right_images = right_images_wolf
+Wolf.left_images = left_images_wolf
 
 # Chicken sprites
 right_images_chicken = [
@@ -96,8 +106,10 @@ while running:
     dx = 0
     if keys[pygame.K_LEFT] or keys[pygame.K_q]:
         dx = -wolf.move_speed
+        wolf.direction = 1
     if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
         dx = wolf.move_speed
+        wolf.direction = -1
     if (keys[pygame.K_SPACE] or keys[pygame.K_z] or keys[pygame.K_w] or keys[pygame.K_UP]) and not wolf.jumping:
         wolf.jump()
 
@@ -105,7 +117,6 @@ while running:
     wolf.jump_speed += wolf.jump_accel
     if wolf.jump_speed > wolf.max_fall_speed:
         wolf.jump_speed = wolf.max_fall_speed
-    # Variable utilisée pour régler la "téléportation" sur une plateforme
     previous_bottom = wolf.rect.bottom
     wolf.move(0, wolf.jump_speed)
 
@@ -113,7 +124,6 @@ while running:
     wolf.jumping = True
     for platform in platforms:
         if wolf.rect.colliderect(platform):
-            # Collision par le haut seulement
             if wolf.jump_speed > 0 and previous_bottom <= platform.top:
                 wolf.rect.bottom = platform.top
                 wolf.jump_speed = 0
@@ -123,18 +133,18 @@ while running:
     # Interactions avec animaux
     for animal in animals:
         animal.update()
+
+        if wolf.hit_timer > 0:
+            continue  # Ignore les collisions pendant l'invincibilité
+
         if animal.alive and wolf.rect.colliderect(animal.rect):
             if wolf.rect.bottom <= animal.rect.top + 10 and wolf.jump_speed > 0:
                 animal.take_damage(1)
                 wolf.jump_speed = -8
             else:
-                if wolf.hit_timer <= 0:
-                    wolf.hp -= 1
-                    wolf.hit_timer = 120
-                    if wolf.hp <= 0:
-                        running = False
-        else:
-            wolf.hit_timer = max(wolf.hit_timer - 1, 0)
+                wolf.take_damage(animal)
+                if wolf.hp <= 0:
+                    running = False
 
     # Scroll horizontal
     if wolf.rect.right > camera_offset + SCREEN_WIDTH:
