@@ -13,6 +13,8 @@ class Animal:
         self.alive = True
         self.frame = 0
         self.frame_timer = 0
+        self.flash_timer = 0
+
 
     def update(self):
         if not self.alive:
@@ -34,6 +36,14 @@ class Animal:
             self.frame = (self.frame + 1) % len(self.images)
             self.image = self.images[self.frame]
             self.frame_timer = 0
+            
+        # Flash rouge quand touché
+        if self.flash_timer > 0:
+            self.image = self.image.copy()
+            red_overlay = pygame.Surface(self.image.get_size(), flags=pygame.SRCALPHA)
+            red_overlay.fill((255, 0, 0, 100))
+            self.image.blit(red_overlay, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+            self.flash_timer -= 1
 
     def draw(self, screen, offset_x=0, offset_y=0):
         if self.alive:
@@ -41,10 +51,12 @@ class Animal:
 
     def take_damage(self, amount):
         self.health -= amount
+        self.flash_timer = 6  # durée du flash rouge
         if self.health <= 0:
             self.alive = False
             return True
         return False
+
 
 
 class Chicken(Animal):
