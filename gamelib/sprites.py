@@ -71,19 +71,22 @@ class Wolf(pygame.sprite.Sprite):
         else:
             self.frame = 0
 
-        self.image = self.images[self.frame]
-        self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
+        base_image = self.images[self.frame]
+        image = base_image.copy()
 
-        # Flash blanc quand touché
+        # Flash rouge
         if self.flash_timer > 0:
-            self.image = self.image.copy()
-            self.image.fill((255, 255, 255, 100), special_flags=pygame.BLEND_RGBA_ADD)
+            red_overlay = pygame.Surface(image.get_size(), flags=pygame.SRCALPHA)
+            red_overlay.fill((255, 0, 0, 80))
+            image.blit(red_overlay, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
             self.flash_timer -= 1
 
-        # Clignotement pendant invulnérabilité
+        # Clignotement pendant invincibilité
         if self.hit_timer > 0 and (self.hit_timer // 5) % 2 == 0:
-            self.image.set_alpha(128)
+            image.set_alpha(128)
         else:
-            self.image.set_alpha(255)
+            image.set_alpha(255)
 
+        self.image = image
+        self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
         self._last_x = self.rect.x
