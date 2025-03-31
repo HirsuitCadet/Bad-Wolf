@@ -134,13 +134,15 @@ while running:
                 break
 
     # Interactions avec animaux
+    # Interactions avec animaux
     for animal in animals:
         animal.update()
 
-        if wolf.hit_timer > 0:
-            continue  # Ignore les collisions pendant l'invincibilité
+        if not animal.alive:
+            continue
 
-        if animal.alive and wolf.rect.colliderect(animal.rect):
+        if wolf.rect.colliderect(animal.rect):
+            # Attaque par le haut (toujours possible)
             if wolf.rect.bottom <= animal.rect.top + 10 and wolf.jump_speed > 0:
                 # Si l'animal meurt
                 if animal.take_damage(1):
@@ -149,8 +151,8 @@ while running:
                         # Drop un os avec de la viande au bout 
                         heals.append(Heal(animal.rect.center))
                 wolf.jump_speed = -8
-
-            else:
+            elif wolf.hit_timer <= 0:
+                # Collision dangereuse seulement si pas invincible
                 wolf.take_damage(animal)
                 if wolf.hp <= 0:
                     running = False
