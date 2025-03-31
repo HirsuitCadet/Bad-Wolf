@@ -63,15 +63,17 @@ class Wolf(pygame.sprite.Sprite):
 
         self.images = self.right_images if self.direction > 0 else self.left_images
 
-        if abs(self.rect.x - self._last_x) > 0:
+        if self.jumping:
+    # Sprite fixe de saut : index 4
+            base_image = self.right_images[4] if self.direction > 0 else self.left_images[4]
+        elif abs(self.rect.x - self._last_x) > 0:
             self.frame_timer += 1
             if self.frame_timer >= 6:
                 self.frame = (self.frame + 1) % len(self.images)
                 self.frame_timer = 0
+            base_image = self.images[self.frame]
         else:
-            self.frame = 0
-
-        base_image = self.images[self.frame]
+            base_image = self.sit_image_right if self.direction > 0 else self.sit_image_left
         image = base_image.copy()
 
         # Flash rouge

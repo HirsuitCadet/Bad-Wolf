@@ -25,7 +25,7 @@ background_image = pygame.image.load("data/fond_enclos.png").convert()
 background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Wolf sprites
-right_images_wolf = [
+left_images_wolf = [
     pygame.image.load("data/Loup1.png").convert_alpha(),
     pygame.image.load("data/Loup2.png").convert_alpha(),
     pygame.image.load("data/Loup3.png").convert_alpha(),
@@ -35,10 +35,17 @@ right_images_wolf = [
     pygame.image.load("data/Loup7.png").convert_alpha(),
     pygame.image.load("data/Loup8.png").convert_alpha(),
 ]
-left_images_wolf = [pygame.transform.flip(img, True, False) for img in right_images_wolf]
+right_images_wolf = [pygame.transform.flip(img, True, False) for img in left_images_wolf]
 
 Wolf.right_images = right_images_wolf
 Wolf.left_images = left_images_wolf
+
+wolf_sit_right = pygame.image.load("data/Loup_sit.png").convert_alpha()
+wolf_sit_left = pygame.transform.flip(wolf_sit_right, True, False)
+
+Wolf.sit_image_right = wolf_sit_right
+Wolf.sit_image_left = wolf_sit_left
+
 
 # Chicken sprites
 right_images_chicken = [
@@ -111,10 +118,10 @@ while running:
     dx = 0
     if keys[pygame.K_LEFT] or keys[pygame.K_q]:
         dx = -wolf.move_speed
-        wolf.direction = 1
+        wolf.direction = -1
     if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
         dx = wolf.move_speed
-        wolf.direction = -1
+        wolf.direction = 1
     if (keys[pygame.K_SPACE] or keys[pygame.K_z] or keys[pygame.K_w] or keys[pygame.K_UP]) and not wolf.jumping:
         wolf.jump()
 
