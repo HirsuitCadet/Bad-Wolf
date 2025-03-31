@@ -3,6 +3,7 @@ import random
 from gamelib.sprites import Wolf
 from gamelib.animals import *
 from gamelib.items import Heal
+from gamelib.effects import BloodEffect
 
 pygame.init()
 
@@ -76,6 +77,7 @@ animals = [
     Pig((1900, 700), right_images_pig, left_images_pig),
 ]
 heals = []
+bloods = []
 
 # Plateformes
 platforms = [
@@ -148,6 +150,7 @@ while running:
                     if random.randint(1,100) <= 20:
                         # Drop un os avec de la viande au bout 
                         heals.append(Heal(animal.rect.center))
+                    bloods.append(BloodEffect(animal.rect.center))
                 wolf.jump_speed = -8
 
             else:
@@ -170,6 +173,14 @@ while running:
         # Disparition naturelle
         elif heal.timer <= 0:
             heals.remove(heal)
+
+    # Affichage des effets
+    for blood in bloods[:]:
+        blood.update()
+        blood.draw(screen, camera_offset, camera_y)
+        if blood.finished:
+            bloods.remove(blood)
+
 
     # Scroll horizontal
     if wolf.rect.right > camera_offset + SCREEN_WIDTH:
