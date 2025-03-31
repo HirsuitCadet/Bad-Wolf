@@ -1,6 +1,8 @@
 import pygame
+import random
 from gamelib.sprites import Wolf
 from gamelib.animals import *
+from gamelib.items import Heal
 
 pygame.init()
 
@@ -73,6 +75,7 @@ animals = [
     Pig((1300, 700), right_images_pig, left_images_pig),
     Pig((1900, 700), right_images_pig, left_images_pig),
 ]
+heals = []
 
 # Plateformes
 platforms = [
@@ -139,12 +142,34 @@ while running:
 
         if animal.alive and wolf.rect.colliderect(animal.rect):
             if wolf.rect.bottom <= animal.rect.top + 10 and wolf.jump_speed > 0:
-                animal.take_damage(1)
+                # Si l'animal meurt
+                if animal.take_damage(1):
+                    # Si on est dans les 20% de chance
+                    if random.randint(1,100) <= 20:
+                        # Drop un os avec de la viande au bout 
+                        heals.append(Heal(animal.rect.center))
                 wolf.jump_speed = -8
+
             else:
                 wolf.take_damage(animal)
                 if wolf.hp <= 0:
                     running = False
+
+    # Affichage des power-ups
+
+    # Affichage des heals
+    for heal in heals[:]:
+        heal.update()
+        heal.draw(screen, camera_offset, camera_y)
+
+        # Ramassage
+        if wolf.rect.colliderect(heal.rect):
+            wolf.hp = min(wolf.hp + 1, wolf.max_health)
+            heals.remove(heal)
+
+        # Disparition naturelle
+        elif heal.timer <= 0:
+            heals.remove(heal)
 
     # Scroll horizontal
     if wolf.rect.right > camera_offset + SCREEN_WIDTH:

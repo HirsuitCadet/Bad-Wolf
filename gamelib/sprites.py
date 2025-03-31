@@ -50,6 +50,9 @@ class Wolf(pygame.sprite.Sprite):
             else:
                 self.knockback_direction = -1
 
+    def heal(self):
+        self.health += 1
+
     def update(self):
         if self.hit_timer > 0:
             self.hit_timer -= 1

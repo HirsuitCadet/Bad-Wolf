@@ -43,6 +43,8 @@ class Animal:
         self.health -= amount
         if self.health <= 0:
             self.alive = False
+            return True
+        return False
 
 
 class Chicken(Animal):
