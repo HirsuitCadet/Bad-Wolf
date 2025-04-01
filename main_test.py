@@ -2,7 +2,7 @@ import pygame
 import random
 from gamelib.sprites import Wolf
 from gamelib.animals import *
-from gamelib.items import Heal
+from gamelib.items import Heal, SpeedBoost
 from gamelib.effects import BloodEffect
 
 pygame.init()
@@ -82,8 +82,12 @@ animals = [
     Cow((1700, 700), right_images_cow, left_images_cow),
     Pig((1300, 700), right_images_pig, left_images_pig),
     Pig((1900, 700), right_images_pig, left_images_pig),
+    Charger((1600, 700)),
 ]
 heals = []
+speedboosts = []
+speedboost_timer = 0
+speedboosts.append(SpeedBoost((600, 700)))
 bloods = []
 
 # Plateformes
@@ -144,11 +148,14 @@ while running:
 
     # Interactions avec animaux
     # Interactions avec animaux
+    
     for animal in animals:
-        animal.update()
-
-        if not animal.alive:
-            continue
+        if isinstance(animal, Charger):
+            animal.update(wolf)
+        else:
+            animal.update()
+            if not animal.alive:
+                continue
 
         if wolf.rect.colliderect(animal.rect):
             # Attaque par le haut (toujours possible)
@@ -161,11 +168,19 @@ while running:
                         heals.append(Heal(animal.rect.center))
                     bloods.append(BloodEffect(animal.rect.center))
                 wolf.jump_speed = -8
+            
             elif wolf.hit_timer <= 0:
                 # Collision dangereuse seulement si pas invincible
                 wolf.take_damage(animal)
+
+                # 💥 Knockback si c'est un Charger
+                if isinstance(animal, Charger):
+                    wolf.jump_speed = -20
+                    wolf.jumping = True
+
                 if wolf.hp <= 0:
                     running = False
+
 
     # Affichage des power-ups
 
@@ -183,7 +198,30 @@ while running:
         elif heal.timer <= 0:
             heals.remove(heal)
 
-    # Affichage des effets
+    
+    # Affichage et ramassage des SpeedBoosts
+    for boost in speedboosts[:]:
+        boost.update()
+        boost.draw(screen, camera_offset, camera_y)
+
+        # Ramassage
+        if wolf.rect.colliderect(boost.rect):
+            speedboosts.remove(boost)
+            speedboost_timer = 600  # 10 secondes
+            wolf.move_speed = 10
+            wolf.jump = lambda: setattr(wolf, 'jump_speed', -20) or setattr(wolf, 'jumping', True)
+
+        elif boost.timer <= 0:
+            speedboosts.remove(boost)
+
+    # Fin du boost après 10 secondes
+    if speedboost_timer > 0:
+        speedboost_timer -= 1
+        if speedboost_timer == 0:
+            wolf.move_speed = 6
+            wolf.jump = lambda: setattr(wolf, 'jump_speed', -13) or setattr(wolf, 'jumping', True)
+
+# Affichage des effets
     for blood in bloods[:]:
         blood.update()
         blood.draw(screen, camera_offset, camera_y)
