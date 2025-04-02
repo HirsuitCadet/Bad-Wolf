@@ -15,12 +15,27 @@ class Animal:
         self.frame = 0
         self.frame_timer = 0
         self.flash_timer = 0
+        self.gravity = 1
+        self.fall_speed = 0
+        self.on_ground = False
 
-    def update(self):
+
+    def update(self,platforms):
         if not self.alive:
             return
 
         self.rect.x += self.speed * self.direction
+
+        self.fall_speed += self.gravity
+        self.rect.y += self.fall_speed
+
+        self.on_ground = False
+        for plat in platforms:
+            if self.rect.colliderect(plat):
+                if self.fall_speed >= 0 and self.rect.bottom <= plat.bottom:
+                    self.rect.bottom = plat.top
+                    self.fall_speed = 0
+                    self.on_ground = True
 
         if self.rect.left < 0 or self.rect.right > 1900:
             self.direction *= -1
@@ -39,6 +54,7 @@ class Animal:
             red_overlay.fill((255, 0, 0, 100))
             self.image.blit(red_overlay, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
             self.flash_timer -= 1
+            
 
     def draw(self, screen, offset_x=0, offset_y=0):
         if self.alive:

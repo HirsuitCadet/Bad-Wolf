@@ -8,13 +8,16 @@ from gamelib.effects import BloodEffect
 pygame.init()
 
 # Config 
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 1550
+SCREEN_HEIGHT = 800
 LEVEL_WIDTH = 1900
 LEVEL_HEIGHT = 1000
 camera_offset = 0
 camera_y = LEVEL_HEIGHT - SCREEN_HEIGHT
 CAMERA_MARGIN_Y = 200
+camera_shake = 0
+game_over = False
+
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bad Wolf – Test Zone")
@@ -110,7 +113,32 @@ heart_image = pygame.Surface((30, 30))
 heart_image.fill((255, 0, 0))
 
 running = True
+# === ÉCRAN DE DÉMARRAGE ===
+title_font = pygame.font.Font(None, 80)
+info_font = pygame.font.Font(None, 40)
+
+title_text = title_font.render("BAD WOLF", True, (255, 255, 255))
+prompt_text = info_font.render("Appuie sur ESPACE pour commencer", True, (200, 200, 200))
+
+waiting = True
+while waiting:
+    screen.fill((0, 0, 0))
+    screen.blit(title_text, (SCREEN_WIDTH // 2 - title_text.get_width() // 2, SCREEN_HEIGHT // 2 - 100))
+    screen.blit(prompt_text, (SCREEN_WIDTH // 2 - prompt_text.get_width() // 2, SCREEN_HEIGHT // 2 + 20))
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            exit()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                waiting = False
+
+    pygame.display.flip()
+    clock.tick(60)
+
 while running:
+
     screen.fill((135, 206, 235))
     screen.blit(background_image, (0, 0))
 
@@ -147,15 +175,15 @@ while running:
                 break
 
     # Interactions avec animaux
-    # Interactions avec animaux
     
     for animal in animals:
         if isinstance(animal, Charger):
             animal.update(wolf)
         else:
-            animal.update()
-            if not animal.alive:
-                continue
+            animal.update(platforms)
+
+        if not animal.alive:
+            continue
 
         if wolf.rect.colliderect(animal.rect):
             # Attaque par le haut (toujours possible)
@@ -175,10 +203,13 @@ while running:
 
                 # 💥 Knockback si c'est un Charger
                 if isinstance(animal, Charger):
+                    camera_shake = 50  # durée de la secousse en frames
+
                     wolf.jump_speed = -20
                     wolf.jumping = True
 
                 if wolf.hp <= 0:
+                    game_over = True
                     running = False
 
 
@@ -253,6 +284,17 @@ while running:
         animal.draw(screen, camera_offset, camera_y)
 
     wolf.update()
+
+    # Appliquer la secousse de caméra si active
+    shake_x = random.randint(-5, 5) if camera_shake > 0 else 0
+    shake_y = random.randint(-5, 5) if camera_shake > 0 else 0
+
+    camera_offset += shake_x
+    camera_y += shake_y
+
+    if camera_shake > 0:
+        camera_shake -= 1
+
     screen.blit(wolf.image, wolf.rect.move(-camera_offset, -camera_y))
 
     for i in range(wolf.hp):
@@ -260,5 +302,29 @@ while running:
 
     pygame.display.flip()
     clock.tick(60)
+# === ÉCRAN DE GAME OVER ===
+if game_over:
+    title_font = pygame.font.Font(None, 80)
+    info_font = pygame.font.Font(None, 40)
+
+    over_text = title_font.render("GAME OVER", True, (255, 0, 0))
+    retry_text = info_font.render("Appuie sur ÉCHAP pour quitter", True, (255, 255, 255))
+
+    waiting = True
+    while waiting:
+        screen.fill((0, 0, 0))
+        screen.blit(over_text, (SCREEN_WIDTH // 2 - over_text.get_width() // 2, SCREEN_HEIGHT // 2 - 100))
+        screen.blit(retry_text, (SCREEN_WIDTH // 2 - retry_text.get_width() // 2, SCREEN_HEIGHT // 2 + 20))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                waiting = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    waiting = False
+
+        pygame.display.flip()
+        clock.tick(60)
 
 pygame.quit()
+
