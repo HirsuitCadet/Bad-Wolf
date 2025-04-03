@@ -59,6 +59,11 @@ right_images_chicken = [
 ]
 left_images_chicken = [pygame.transform.flip(img, True, False) for img in right_images_chicken]
 
+# Rooster boss
+rooster_boss = RoosterBoss((1000, 700), [pygame.Surface((80, 80))], [pygame.Surface((80, 80))])
+rooster_boss.right_images[0].fill((255, 255, 255))
+rooster_boss.left_images[0].fill((255, 255, 255))
+
 #Cow sprites
 right_images_cow = [
     pygame.image.load("data/Vache1.png").convert_alpha(),
@@ -83,15 +88,18 @@ animals = [
     Chicken((1500, 700), right_images_chicken, left_images_chicken),
     Cow((1200, 700), right_images_cow, left_images_cow),
     Cow((1700, 700), right_images_cow, left_images_cow),
-    Pig((1300, 700), right_images_pig, left_images_pig),
+    Pig((1500, 700), right_images_pig, left_images_pig),
     Pig((1900, 700), right_images_pig, left_images_pig),
     Charger((1600, 700)),
 ]
+animals.append(rooster_boss)
 heals = []
 speedboosts = []
 speedboost_timer = 0
 speedboosts.append(SpeedBoost((600, 700)))
 bloods = []
+egg_explosions = []
+frame_counter = 0
 
 # Plateformes
 platforms = [
@@ -296,9 +304,23 @@ while running:
         camera_shake -= 1
 
     screen.blit(wolf.image, wolf.rect.move(-camera_offset, -camera_y))
+    
+    rooster_boss.update(wolf.rect, wolf, egg_explosions)
+    rooster_boss.draw(screen, camera_offset, camera_y)
 
     for i in range(wolf.hp):
         screen.blit(heart_image, (10 + i * 35, 10))
+
+    frame_counter += 1
+    if wolf.hp <= 0:
+        running = False
+
+    # Affichage des effets d'explosion d'œufs
+    for img, pos, delay in egg_explosions[:]:
+        if frame_counter >= delay:
+            screen.blit(img, (pos[0] - img.get_width() // 2 - camera_offset,
+                            pos[1] - img.get_height() // 2 - camera_y))
+            egg_explosions.remove((img, pos, delay))
 
     pygame.display.flip()
     clock.tick(60)
