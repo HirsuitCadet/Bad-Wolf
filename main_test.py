@@ -91,6 +91,7 @@ animals = [
     Pig((1500, 700), right_images_pig, left_images_pig),
     Pig((1900, 700), right_images_pig, left_images_pig),
     Charger((1600, 700)),
+    Dog((800, 700)),
 ]
 animals.append(rooster_boss)
 heals = []
@@ -187,6 +188,8 @@ while running:
     for animal in animals:
         if isinstance(animal, Charger):
             animal.update(wolf)
+        elif isinstance(animal, Dog):
+            animal.update(wolf, platforms)
         else:
             animal.update(platforms)
 
@@ -209,7 +212,7 @@ while running:
                 # Collision dangereuse seulement si pas invincible
                 wolf.take_damage(animal)
 
-                # 💥 Knockback si c'est un Charger
+                # Knockback si c'est un Charger
                 if isinstance(animal, Charger):
                     camera_shake = 50  # durée de la secousse en frames
 

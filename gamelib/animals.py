@@ -85,7 +85,7 @@ class Cow(Animal):
 
 class Pig(Animal):
     def __init__(self, pos, right_images, left_images):
-        super().__init__(pos, right_images, left_images, speed=1, health=2)
+        super().__init__(pos, right_images, left_images, speed=2, health=2)
 
 class Charger(Animal):
     def __init__(self, pos):
@@ -100,9 +100,10 @@ class Charger(Animal):
 
         # Distance entre le loup et le Charger
         dx = wolf.rect.centerx - self.rect.centerx
+        dy = wolf.rect.centery - self.rect.centery
 
         # Si le loup est devant lui et à portée → charge
-        if abs(dx) < 500 and ((dx > 0 and self.direction > 0) or (dx < 0 and self.direction < 0)):
+        if abs(dx) < 500 and abs(dy) < 100 and ((dx > 0 and self.direction > 0) or (dx < 0 and self.direction < 0)):
             self.speed = 7
         else:
             self.speed = 3
@@ -278,3 +279,56 @@ class RoosterBoss(Animal):
             screen.blit(image, self.rect.move(-offset_x, -offset_y))
         for egg in self.projectiles:
             egg.draw(screen, offset_x, offset_y)
+class Dog(Animal):
+    def __init__(self, pos):
+        self.attack_delay = 0  # timer d'attente avant saut
+        self.attacking = False  # état d'attaque
+        self.target_x = None  # position du loup enregistrée
+        self.target_y = None
+        self.vel_x = 0
+        self.vel_y = 0
+        self.jump_duration = 30  # durée estimée du saut (en frames)
+
+        surface = pygame.Surface((60, 60), pygame.SRCALPHA)
+        surface.fill((100, 100, 255))  # cube bleu
+        super().__init__(pos, [surface], [surface], speed=4, health=2)
+        self.rect = self.image.get_rect(topleft=pos)
+        self.jump_timer = random.randint(60, 180)  # entre 1 et 3 secondes
+
+    def update(self, wolf, platforms):
+        super().update(platforms)
+
+        dx = wolf.rect.centerx - self.rect.centerx
+        dy = wolf.rect.centery - self.rect.centery
+
+        # Préparer l'attaque si le loup est proche
+        if abs(dx) < 400 and abs(dy) < 150 and self.on_ground and not self.attacking and self.target_x is None:
+            self.target_x = wolf.rect.centerx
+            self.target_y = wolf.rect.centery
+            self.attack_delay = 60  # 1 seconde
+            self.attacking = True
+            self.speed = 0
+
+        elif self.attacking:
+            self.attack_delay -= 1
+            if self.attack_delay <= 0:
+                # Calculer une trajectoire vers la position enregistrée
+                dx = self.target_x - self.rect.centerx
+                dy = self.target_y - self.rect.centery
+
+                self.vel_x = dx / self.jump_duration
+                self.vel_y = dy / self.jump_duration - 0.5 * self.gravity * self.jump_duration
+
+                self.attacking = False
+                self.speed = 0
+                self.fall_speed = self.vel_y  # initialise la chute
+
+        # Appliquer mouvement si trajectoire active
+        if self.target_x is not None and not self.attacking:
+            self.rect.x += int(self.vel_x)
+
+            if abs(self.rect.centerx - self.target_x) < 10 and self.on_ground:
+                self.target_x = None
+                self.target_y = None
+                self.speed = 4  # Reprend son déplacement normal
+
