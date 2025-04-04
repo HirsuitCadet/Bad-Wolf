@@ -87,11 +87,13 @@ class Pig(Animal):
         super().__init__(pos, right_images, left_images, speed=2, health=2)
 
 class Charger(Animal):
-    def __init__(self, pos):
-        surface = pygame.Surface((100, 100), pygame.SRCALPHA)
-        surface.fill((200, 0, 200))
-        super().__init__(pos, [surface], [surface], speed=6, health=3)
-        self.rect = self.image.get_rect(topleft=pos)
+    def __init__(self, pos, walk_right, walk_left, charge_right, charge_left):
+        super().__init__(pos, walk_right, walk_left, speed=3, health=3)
+        self.walk_right_images = walk_right
+        self.walk_left_images = walk_left
+        self.charge_right_images = charge_right
+        self.charge_left_images = charge_left
+        self.is_charging = False
 
     def update(self, wolf=None):
         if not self.alive:
@@ -104,16 +106,28 @@ class Charger(Animal):
         # Si le loup est devant lui et à portée → charge
         if abs(dx) < 500 and abs(dy) < 100 and ((dx > 0 and self.direction > 0) or (dx < 0 and self.direction < 0)):
             self.speed = 7
+            self.is_charging = True
         else:
             self.speed = 3
+            self.is_charging = False
+        
+        if self.is_charging:
+            self.images = self.charge_right_images if self.direction > 0 else self.charge_left_images
+        else:
+            self.images = self.walk_right_images if self.direction > 0 else self.walk_left_images
+
+        self.frame_timer += 1
+        if self.frame_timer >= 6:
+            self.frame = (self.frame + 1) % len(self.images)
+            self.image = self.images[self.frame]
+            self.frame_timer = 0
+
 
         self.rect.x += self.speed * self.direction
 
         if self.rect.left < 0 or self.rect.right > 1900:
             self.direction *= -1
 
-        self.images = self.right_images if self.direction > 0 else self.left_images
-        self.image = self.images[0]
 
         if self.flash_timer > 0:
             self.image = self.image.copy()

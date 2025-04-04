@@ -81,6 +81,19 @@ right_images_pig = [
 ]
 left_images_pig = [pygame.transform.flip(img, True, False) for img in right_images_pig]
 
+right_images_charger_walk = [
+    pygame.image.load("data/boss_vache_marche_1.png").convert_alpha(),
+    pygame.image.load("data/boss_vache_marche_2.png").convert_alpha()
+]
+left_images_charger_walk = [pygame.transform.flip(img, True, False) for img in right_images_charger_walk]
+
+right_images_charger_charge = [
+    pygame.image.load("data/boss_vache_charge_1.png").convert_alpha(),
+    pygame.image.load("data/boss_vache_charge_2.png").convert_alpha()
+]
+left_images_charger_charge = [pygame.transform.flip(img, True, False) for img in right_images_charger_charge]
+
+
 # Entities
 wolf = Wolf((150, 700))
 animals = [
@@ -90,7 +103,7 @@ animals = [
     Cow((1700, 700), right_images_cow, left_images_cow),
     Pig((1500, 700), right_images_pig, left_images_pig),
     Pig((1900, 700), right_images_pig, left_images_pig),
-    Charger((1600, 700)),
+    Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
     Dog((800, 700)),
 ]
 animals.append(rooster_boss)
