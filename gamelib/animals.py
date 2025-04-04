@@ -67,7 +67,6 @@ class Animal:
     def take_damage(self, amount):
         self.health -= amount
         self.flash_timer = 6
-        self.flash_timer = 6
         if self.health <= 0:
             self.alive = False
             self.rect.width = 0
@@ -150,7 +149,7 @@ class RoosterBoss(Animal):
         self.health = 3
         self.speed = 2.5
         self.normal_speed = 2.5
-        self.flee_speed = 10  # Vitesse pendant la fuite
+        self.flee_speed = 10
         self.flee_timer = 0
         self.projectiles = []
         self.shooting = False
@@ -171,6 +170,11 @@ class RoosterBoss(Animal):
             pygame.image.load("data/oeuf3.png").convert_alpha(),
             pygame.image.load("data/oeuf4.png").convert_alpha()
         ]
+
+        self.frame = 0
+        self.frame_timer = 0
+        self.image = self.right_images[0]
+        self.rect = self.image.get_rect(topleft=pos)
 
     def update(self, wolf_rect=None, wolf=None, effects=None):
         if not self.alive:
@@ -202,6 +206,7 @@ class RoosterBoss(Animal):
                 self.frame = (self.frame + 1) % len(self.images)
                 self.image = self.images[self.frame]
                 self.frame_timer = 0
+                self.rect = self.image.get_rect(topleft=self.rect.topleft)
 
         if self.flash_timer > 0:
             self.image = self.image.copy()
@@ -223,8 +228,7 @@ class RoosterBoss(Animal):
             if self.shoot_interval <= 0:
                 prob_map = {3: 30, 2: 60, 1: 90}
                 shoot_chance = prob_map.get(self.health, 90)
-                alea = random.randint(1, 100)
-                if alea <= shoot_chance:
+                if random.randint(1, 100) <= shoot_chance:
                     if wolf_rect and abs(self.rect.centerx - wolf_rect.centerx) < 400:
                         dir_x = 1 if wolf_rect.centerx > self.rect.centerx else -1
                         dir_y = random.choice([0, -1])
@@ -244,10 +248,11 @@ class RoosterBoss(Animal):
                     wolf.hit_timer = 60
                     if effects is not None:
                         for i, frame in enumerate(self.explosion_frames):
-                            effects.append((frame, egg.rect.center, 15))
+                            rect = frame.get_rect(center=egg.rect.center)
+                            effects.append((frame, rect.topleft, i * 3))
         self.projectiles = [e for e in self.projectiles if e.alive]
 
-    def take_damage(self, amount, wolf_rect=None, current_frame=None):
+    def take_damage(self, amount, wolf_rect=None, current_frame=None, effects=None):
         if self.invincibility_timer > 0:
             return False
 
@@ -263,13 +268,14 @@ class RoosterBoss(Animal):
 
         if self.health <= 0:
             self.alive = False
+            if effects is not None:
+                blood_surface = pygame.Surface((60, 60), pygame.SRCALPHA)
+                pygame.draw.circle(blood_surface, (180, 0, 0, 160), (30, 30), 30)
+                effects.append((blood_surface, self.rect.center))
             return True
 
         if wolf_rect:
-            if wolf_rect.centerx < self.rect.centerx:
-                self.direction = 1
-            else:
-                self.direction = -1
+            self.direction = 1 if wolf_rect.centerx < self.rect.centerx else -1
 
         return False
 

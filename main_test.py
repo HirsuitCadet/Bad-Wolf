@@ -186,12 +186,15 @@ while running:
     # Interactions avec animaux
     
     for animal in animals:
-        if isinstance(animal, Charger):
+        if isinstance(animal, RoosterBoss):
+            animal.update(wolf.rect, wolf, bloods)
+        elif isinstance(animal, Charger):
             animal.update(wolf)
         elif isinstance(animal, Dog):
             animal.update(wolf, platforms)
         else:
             animal.update(platforms)
+
 
         if not animal.alive:
             continue
@@ -222,9 +225,6 @@ while running:
                 if wolf.hp <= 0:
                     game_over = True
                     running = False
-
-
-    # Affichage des power-ups
 
     # Affichage des heals
     for heal in heals[:]:
@@ -263,12 +263,20 @@ while running:
             wolf.move_speed = 6
             wolf.jump = lambda: setattr(wolf, 'jump_speed', -13) or setattr(wolf, 'jumping', True)
 
-# Affichage des effets
+    # Affichage des effets
+    explosion_frame_duration = 25  # plus la valeur est grande, plus l'explosion est lente
+
     for blood in bloods[:]:
-        blood.update()
-        blood.draw(screen, camera_offset, camera_y)
-        if blood.finished:
-            bloods.remove(blood)
+        if isinstance(blood, tuple):  # Animation d'explosion d'œuf
+            img, pos, delay = blood
+            if frame_counter >= delay * explosion_frame_duration:
+                screen.blit(img, (pos[0] - camera_offset, pos[1] - camera_y))
+                bloods.remove(blood)
+        else:  # BloodEffect classique
+            blood.update()
+            blood.draw(screen, camera_offset, camera_y)
+            if blood.finished:
+                bloods.remove(blood)
 
 
     # Scroll horizontal
