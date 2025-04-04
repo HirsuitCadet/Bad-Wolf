@@ -139,7 +139,7 @@ class Charger(Animal):
 
 class EggProjectile:
     def __init__(self, pos, direction):
-        self.image = pygame.image.load("data/oeuf.webp").convert_alpha()
+        self.image = pygame.image.load("data/oeuf.png").convert_alpha()
         self.rect = self.image.get_rect(center=pos)
         self.speed_x = 6 * direction[0]
         self.speed_y = 5 * direction[1]
@@ -352,3 +352,67 @@ class Dog(Animal):
                 self.target_y = None
                 self.speed = 4  # Reprend son déplacement normal
 
+class PigBoss(Animal):
+    def __init__(self, pos, walk_right, walk_left, charge_right, charge_left):
+        super().__init__(pos, walk_right, walk_left, speed=2, health=4)
+        self.walk_right_images = walk_right
+        self.walk_left_images = walk_left
+        self.charge_right_images = charge_right
+        self.charge_left_images = charge_left
+        self.is_charging = False
+
+    def update(self, wolf, platforms):
+        if not self.alive:
+            return
+
+        # Appliquer la gravité et les collisions avec le sol
+        super().update(platforms)
+
+        dx = wolf.rect.centerx - self.rect.centerx
+        dy = wolf.rect.centery - self.rect.centery
+
+        # Détection pour enclencher la charge
+        if abs(dx) < 500 and abs(dy) < 100 and ((dx > 0 and self.direction > 0) or (dx < 0 and self.direction < 0)):
+            self.speed = 4
+            self.is_charging = True
+        else:
+            self.speed = 2
+            self.is_charging = False
+
+        # Choix des sprites
+        if self.is_charging:
+            self.images = self.charge_right_images if self.direction > 0 else self.charge_left_images
+        else:
+            self.images = self.walk_right_images if self.direction > 0 else self.walk_left_images
+
+        # Animation
+        self.frame_timer += 1
+        if self.frame_timer >= 15:
+            self.frame = (self.frame + 1) % len(self.images)
+            self.image = self.images[self.frame]
+            self.frame_timer = 0
+
+        # Déplacement horizontal
+        self.rect.x += self.speed * self.direction
+
+        # Collision avec les bords
+        if self.rect.left < 0 or self.rect.right > LEVEL_WIDTH:
+            self.direction *= -1
+
+        # Flash rouge si touché
+        if self.flash_timer > 0:
+            self.image = self.image.copy()
+            red_overlay = pygame.Surface(self.image.get_size(), flags=pygame.SRCALPHA)
+            red_overlay.fill((255, 0, 0, 100))
+            self.image.blit(red_overlay, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+            self.flash_timer -= 1
+
+    def crush_effect(self, wolf):
+        wolf.take_damage(self)
+        wolf.move_speed = 3
+        wolf.jump = lambda: setattr(wolf, 'jump_speed', -6) or setattr(wolf, 'jumping', True)
+        wolf.slowed_timer = 180  # 3 secondes
+        wolf.hit_timer = 60
+        wolf.right_images = wolf.squished_right_images
+        wolf.left_images = wolf.squished_left_images
+        self.direction *= -1

@@ -29,6 +29,14 @@ class Wolf(pygame.sprite.Sprite):
         self.frame_timer = 0
         self._last_x = self.rect.x
 
+        self.default_right_images = self.right_images.copy()
+        self.default_left_images = self.left_images.copy()
+        self.squished_right_images = [pygame.transform.scale(img, (img.get_width(), int(img.get_height() * 0.6))) for img in self.right_images]
+        self.squished_left_images = [pygame.transform.flip(img, True, False) for img in self.squished_right_images]
+        self.squished_sit_image_right = pygame.transform.scale(self.sit_image_right, (self.sit_image_right.get_width(), int(self.sit_image_right.get_height() * 0.6)))
+        self.squished_sit_image_left = pygame.transform.scale(self.sit_image_left, (self.sit_image_left.get_width(), int(self.sit_image_left.get_height() * 0.6)))
+
+
     def move(self, dx, dy):
         self.rect.x += dx
         self.rect.y += dy
@@ -73,7 +81,11 @@ class Wolf(pygame.sprite.Sprite):
                 self.frame_timer = 0
             base_image = self.images[self.frame]
         else:
-            base_image = self.sit_image_right if self.direction > 0 else self.sit_image_left
+            if hasattr(self, 'slowed_timer') and self.slowed_timer > 0:
+                base_image = self.squished_sit_image_right if self.direction > 0 else self.squished_sit_image_left
+            else:
+                base_image = self.sit_image_right if self.direction > 0 else self.sit_image_left
+
         image = base_image.copy()
 
         # Flash rouge

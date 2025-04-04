@@ -4,6 +4,8 @@ from gamelib.sprites import Wolf
 from gamelib.animals import *
 from gamelib.items import Heal, SpeedBoost
 from gamelib.effects import BloodEffect
+from gamelib.animals import PigBoss
+
 
 pygame.init()
 
@@ -93,18 +95,34 @@ right_images_charger_charge = [
 ]
 left_images_charger_charge = [pygame.transform.flip(img, True, False) for img in right_images_charger_charge]
 
+# Sprites marche
+right_walk_pigboss = [
+    pygame.image.load("data/boss_cochon_1.png").convert_alpha(),
+    pygame.image.load("data/boss_cochon_2.png").convert_alpha(),
+    pygame.image.load("data/boss_cochon_3.png").convert_alpha()
+]
+left_walk_pigboss = [pygame.transform.flip(img, True, False) for img in right_walk_pigboss]
+
+# Sprites charge
+right_charge_pigboss = [
+    pygame.image.load("data/boss_cochon_2.png").convert_alpha()
+]
+left_charge_pigboss = [pygame.transform.flip(img, True, False) for img in right_charge_pigboss]
+
+
 
 # Entities
 wolf = Wolf((150, 700))
 animals = [
-    Chicken((1000, 700), right_images_chicken, left_images_chicken),
-    Chicken((1500, 700), right_images_chicken, left_images_chicken),
-    Cow((1200, 700), right_images_cow, left_images_cow),
-    Cow((1700, 700), right_images_cow, left_images_cow),
-    Pig((1500, 700), right_images_pig, left_images_pig),
-    Pig((1900, 700), right_images_pig, left_images_pig),
-    Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
-    Dog((800, 700)),
+    #Chicken((1000, 700), right_images_chicken, left_images_chicken),
+    #Chicken((1500, 700), right_images_chicken, left_images_chicken),
+    #Cow((1200, 700), right_images_cow, left_images_cow),
+    #Cow((1700, 700), right_images_cow, left_images_cow),
+    #Pig((1500, 700), right_images_pig, left_images_pig),
+    #Pig((1900, 700), right_images_pig, left_images_pig),
+    #Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
+    #Dog((800, 700)),
+    #PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
 ]
 animals.append(rooster_boss)
 heals = []
@@ -140,11 +158,13 @@ title_font = pygame.font.Font(None, 80)
 info_font = pygame.font.Font(None, 40)
 
 title_text = title_font.render("BAD WOLF", True, (255, 255, 255))
-prompt_text = info_font.render("Appuie sur ESPACE pour commencer", True, (200, 200, 200))
+prompt_text = info_font.render("Appuie sur ENTREE pour commencer", True, (200, 200, 200))
 
 waiting = True
 while waiting:
-    screen.fill((0, 0, 0))
+    start_img = pygame.image.load("data/start_screen.png").convert()
+    start_img = pygame.transform.scale(start_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
+    screen.blit(start_img, (0, 0))
     screen.blit(title_text, (SCREEN_WIDTH // 2 - title_text.get_width() // 2, SCREEN_HEIGHT // 2 - 100))
     screen.blit(prompt_text, (SCREEN_WIDTH // 2 - prompt_text.get_width() // 2, SCREEN_HEIGHT // 2 + 20))
 
@@ -153,7 +173,7 @@ while waiting:
             pygame.quit()
             exit()
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
+            if event.key == pygame.K_RETURN:
                 waiting = False
 
     pygame.display.flip()
@@ -205,6 +225,25 @@ while running:
             animal.update(wolf)
         elif isinstance(animal, Dog):
             animal.update(wolf, platforms)
+        elif isinstance(animal, PigBoss):
+            animal.update(wolf=wolf, platforms=platforms)
+            if wolf.rect.colliderect(animal.rect):
+                loup_above_boss = (
+                    previous_bottom <= animal.rect.top and
+                    wolf.jump_speed > 0 and
+                    wolf.rect.bottom <= animal.rect.top + 10
+                )
+                
+                if loup_above_boss:
+                    if animal.take_damage(1):
+                        if random.randint(1, 100) <= 20:
+                            heals.append(Heal(animal.rect.center))
+                        bloods.append(BloodEffect(animal.rect.center))
+                    wolf.jump_speed = -8
+
+                elif wolf.hit_timer <= 0:
+                    animal.crush_effect(wolf)
+
         else:
             animal.update(platforms)
 
@@ -212,21 +251,17 @@ while running:
         if not animal.alive:
             continue
 
-        if wolf.rect.colliderect(animal.rect):
-            # Attaque par le haut (toujours possible)
-            if wolf.rect.bottom <= animal.rect.top + 10 and wolf.jump_speed > 0:
-                # Si l'animal meurt
+        if wolf.rect.colliderect(animal.rect) and not isinstance(animal, PigBoss):
+            if previous_bottom <= animal.rect.top and wolf.jump_speed > 0:
                 if animal.take_damage(1):
-                    # Si on est dans les 20% de chance
-                    if random.randint(1,100) <= 20:
-                        # Drop un os avec de la viande au bout 
+                    if random.randint(1, 100) <= 20:
                         heals.append(Heal(animal.rect.center))
                     bloods.append(BloodEffect(animal.rect.center))
                 wolf.jump_speed = -8
-            
             elif wolf.hit_timer <= 0:
-                # Collision dangereuse seulement si pas invincible
                 wolf.take_damage(animal)
+                animal.crush_effect(wolf)
+
 
                 # Knockback si c'est un Charger
                 if isinstance(animal, Charger):
@@ -317,6 +352,15 @@ while running:
 
     wolf.update()
 
+    # Gestion du ralentissement temporaire par le boss cochon
+    if hasattr(wolf, 'slowed_timer') and wolf.slowed_timer > 0:
+        wolf.slowed_timer -= 1
+        if wolf.slowed_timer == 0:
+            wolf.move_speed = 6
+            wolf.jump = lambda: setattr(wolf, 'jump_speed', -13) or setattr(wolf, 'jumping', True)
+            wolf.right_images = wolf.default_right_images
+            wolf.left_images = wolf.default_left_images
+
     # Appliquer la secousse de caméra si active
     shake_x = random.randint(-5, 5) if camera_shake > 0 else 0
     shake_y = random.randint(-5, 5) if camera_shake > 0 else 0
@@ -337,6 +381,7 @@ while running:
 
     frame_counter += 1
     if wolf.hp <= 0:
+        game_over = True
         running = False
 
     # Affichage des effets d'explosion d'œufs
@@ -358,7 +403,9 @@ if game_over:
 
     waiting = True
     while waiting:
-        screen.fill((0, 0, 0))
+        gameover_img = pygame.image.load("data/gameover_screen.png").convert()
+        gameover_img = pygame.transform.scale(gameover_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        screen.blit(gameover_img, (0, 0))
         screen.blit(over_text, (SCREEN_WIDTH // 2 - over_text.get_width() // 2, SCREEN_HEIGHT // 2 - 100))
         screen.blit(retry_text, (SCREEN_WIDTH // 2 - retry_text.get_width() // 2, SCREEN_HEIGHT // 2 + 20))
 
