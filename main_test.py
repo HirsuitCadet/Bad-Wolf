@@ -62,9 +62,9 @@ right_images_chicken = [
 left_images_chicken = [pygame.transform.flip(img, True, False) for img in right_images_chicken]
 
 # Rooster boss
-rooster_boss = RoosterBoss((1000, 700), [pygame.Surface((80, 80))], [pygame.Surface((80, 80))])
-rooster_boss.right_images[0].fill((255, 255, 255))
-rooster_boss.left_images[0].fill((255, 255, 255))
+#rooster_boss = RoosterBoss((1000, 700), [pygame.Surface((80, 80))], [pygame.Surface((80, 80))])
+#rooster_boss.right_images[0].fill((255, 255, 255))
+#rooster_boss.left_images[0].fill((255, 255, 255))
 
 #Cow sprites
 right_images_cow = [
@@ -120,9 +120,10 @@ animals = [
     #Cow((1700, 700), right_images_cow, left_images_cow),
     #Pig((1500, 700), right_images_pig, left_images_pig),
     #Pig((1900, 700), right_images_pig, left_images_pig),
-    Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
+    #Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
     #Dog((800, 700)),
     #PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
+    FinalBoss((500, 700)),
 ]
 #animals.append(rooster_boss)
 heals = []
@@ -223,6 +224,52 @@ while running:
             animal.update(wolf.rect, wolf, bloods)
         elif isinstance(animal, Charger):
             animal.update(wolf)
+        elif isinstance(animal, FinalBoss):
+            animal.update(wolf, platforms)
+
+            if animal.charging and wolf.rect.colliderect(animal.rect) and wolf.hit_timer <= 0:
+                wolf.take_damage(animal)
+                camera_shake = 30
+
+            for proj in animal.projectiles:
+                rect, vx, vy = proj
+                pygame.draw.rect(screen, (255, 255, 0), rect.move(-camera_offset, -camera_y))
+
+                if rect.colliderect(wolf.rect) and wolf.hit_timer <= 0:
+                    wolf.take_damage(animal)
+
+
+            loup_above = (
+                    previous_bottom <= animal.rect.top and
+                    wolf.jump_speed > 0 and
+                    wolf.rect.bottom <= animal.rect.top + 10
+                )
+
+            if wolf.rect.colliderect(animal.rect):
+                
+
+                if loup_above:
+                    if animal.take_damage(1):
+                        bloods.append(BloodEffect(animal.rect.center))
+                    wolf.jump_speed = -8  # rebond
+
+                elif wolf.hit_timer <= 0 and not animal.attack_zone_active:
+                        wolf.take_damage(animal)
+                
+            # Zone d’impact (attaque au sol)
+            if animal.attack_zone_active:
+                zone_rect = pygame.Rect(animal.rect.centerx - 120, animal.rect.bottom - 20, 240, 20)
+                pygame.draw.rect(screen, (255, 0, 0), zone_rect.move(-camera_offset, -camera_y))
+
+                if (
+                    zone_rect.colliderect(wolf.rect)
+                    and not loup_above
+                    and wolf.hit_timer <= 0
+                ):
+                    wolf.take_damage(animal)
+
+
+
         elif isinstance(animal, Dog):
             animal.update(wolf, platforms)
         elif isinstance(animal, PigBoss):
@@ -252,7 +299,7 @@ while running:
         if not animal.alive:
             continue
 
-        if wolf.rect.colliderect(animal.rect) and not isinstance(animal, PigBoss):
+        if wolf.rect.colliderect(animal.rect) and not isinstance(animal, PigBoss) and not isinstance(animal, FinalBoss):
             loup_above = (
                 previous_bottom <= animal.rect.top and
                 wolf.jump_speed > 0 and
@@ -383,8 +430,8 @@ while running:
 
     screen.blit(wolf.image, wolf.rect.move(-camera_offset, -camera_y))
     
-    rooster_boss.update(wolf.rect, wolf, egg_explosions)
-    rooster_boss.draw(screen, camera_offset, camera_y)
+    #rooster_boss.update(wolf.rect, wolf, egg_explosions)
+    #rooster_boss.draw(screen, camera_offset, camera_y)
 
     for i in range(wolf.hp):
         screen.blit(heart_image, (10 + i * 35, 10))

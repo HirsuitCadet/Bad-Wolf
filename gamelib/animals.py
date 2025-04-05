@@ -2,6 +2,7 @@
 import pygame
 import random
 import time
+import math
 
 LEVEL_WIDTH = 1900
 
@@ -445,3 +446,246 @@ class PigBoss(Animal):
     def knockback(self):
         self.flee_timer = 15
         self.direction *= -1
+
+class FinalBoss(Animal):
+    def __init__(self, pos):
+        # 3 phases : rouge, orange, violet
+        self.phase = 1
+        surface1 = pygame.Surface((50, 50), pygame.SRCALPHA)
+        surface1.fill((255, 0, 0))  # Phase 1 : rouge
+        surface2 = pygame.Surface((50, 50), pygame.SRCALPHA)
+        surface2.fill((255, 165, 0))  # Phase 2 : orange
+        surface3 = pygame.Surface((50, 50), pygame.SRCALPHA)
+        surface3.fill((138, 43, 226))  # Phase 3 : violet
+
+        self.phase_images = {
+            1: [surface1],
+            2: [surface2],
+            3: [surface3]
+        }
+
+        self.projectiles = []  # Liste de projectiles de phase 2 (rect, vx, vy)
+
+
+        super().__init__(pos, self.phase_images[1], self.phase_images[1], speed=2, health=6)
+        self.direction = 1
+        self.phase_changed = False
+
+        self.attacking = False
+        self.attack_cooldown = 180  # frames entre les attaques (~3 secondes)
+        self.attack_timer = 0
+        self.attack_zone_active = False
+        self.attack_zone_duration = 60  # durée visible de l'attaque de zone
+        self.movement_locked = False
+        self.has_jumped = False
+
+        self.charging = False
+        self.charge_timer = 0
+        self.charge_speed = 17
+        self.charge_cooldown = 180
+        self.current_charge_time = 0
+        self.max_charge_duration = 60  # durée max de la charge en frames
+        self.walk_speed = 5  # vitesse normale
+        self.speed = self.walk_speed  # valeur par défaut
+
+
+
+
+
+    def update(self, wolf=None, platforms=None):
+        if not self.alive:
+            return
+
+        # Toujours appliquer la gravité
+        self.fall_speed += self.gravity
+        self.rect.y += self.fall_speed
+
+        self.on_ground = False
+        if platforms:
+            for plat in platforms:
+                if self.rect.colliderect(plat):
+                    if self.fall_speed >= 0 and self.rect.bottom <= plat.bottom:
+                        self.rect.bottom = plat.top
+                        self.fall_speed = 0
+                        self.on_ground = True
+
+        # MOUVEMENT HORIZONTAL si pas en attaque
+        if not self.movement_locked:
+            if not hasattr(self, 'direction_timer'):
+                self.direction_timer = 0
+
+            self.direction_timer += 1
+            if self.direction_timer > 30:
+                if random.random() < 0.02:
+                    self.direction *= -1
+                self.direction_timer = 0
+
+            self.rect.x += self.speed * self.direction
+
+
+
+        # Empêche le boss de sortir du niveau
+        if self.rect.left < 0:
+            self.rect.left = 0
+            self.direction = 1
+        elif self.rect.right > 1550:
+            self.rect.right = 1550
+            self.direction = -1
+
+
+        # phase update
+        if self.health <= 4 and self.phase == 1:
+            self.phase = 2
+            self.right_images = self.left_images = self.phase_images[2]
+            self.speed = 3
+        elif self.health <= 2 and self.phase == 2:
+            self.phase = 3
+            self.right_images = self.left_images = self.phase_images[3]
+            self.speed = 4
+
+        self.images = self.right_images if self.direction > 0 else self.left_images
+
+        self.frame_timer += 1
+        if self.frame_timer >= 10:
+            self.frame = (self.frame + 1) % len(self.images)
+            self.image = self.images[self.frame]
+            self.frame_timer = 0
+
+        if self.flash_timer > 0:
+            self.image = self.image.copy()
+            red_overlay = pygame.Surface(self.image.get_size(), flags=pygame.SRCALPHA)
+            red_overlay.fill((255, 0, 0, 100))
+            self.image.blit(red_overlay, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+            self.flash_timer -= 1
+        if not hasattr(self, 'direction_timer'):
+            self.direction_timer = 0
+
+        self.direction_timer += 1
+        if self.direction_timer > 30:  # toutes les 30 frames (~0.5s), possibilité de changer de sens
+            if random.random() < 0.02:  # 2% de chance de changer de sens
+                self.direction *= -1
+            self.direction_timer = 0
+
+        # Attaque spéciale (phase 1 uniquement, mais tu peux adapter à chaque phase)
+        if self.phase == 1:
+            self.attack_phase_1(wolf)
+
+        if self.phase == 2:
+            self.attack_phase_2(wolf)
+
+        if self.phase == 3:
+            self.attack_phase_3(wolf)
+
+
+        # Gestion visuelle de la zone d'attaque au sol
+        if self.attack_zone_active:
+            self.attack_zone_duration -= 1
+            if self.attack_zone_duration <= 0:
+                self.attack_zone_active = False
+                self.attack_zone_duration = 60
+                self.movement_locked = False
+
+        # Mise à jour des projectiles (rebondit vers le bas)
+        for proj in self.projectiles:
+            rect, vx, vy = proj
+            rect.x += vx
+            #vy += 0.4  # gravité appliquée
+            rect.y += vy
+            proj[2] = vy  # on met à jour le vy dans la liste
+
+
+        # Supprime les projectiles trop bas
+        self.projectiles = [p for p in self.projectiles if p[0].y < 2000]
+
+
+
+    def attack_phase_1(self, wolf):
+        if not self.attacking:
+            if self.attack_timer > 0:
+                self.attack_timer -= 1
+            elif self.on_ground:
+                # Déclenche un saut vertical
+                self.fall_speed = -20
+                self.attacking = True
+                self.movement_locked = True
+                self.has_jumped = True  # nouvelle variable pour suivre le saut
+
+        elif self.attacking:
+            # On attend que le boss soit revenu au sol pour frapper
+            if self.has_jumped and self.on_ground:
+                self.attack_zone_active = True
+                self.attacking = False
+                self.attack_timer = self.attack_cooldown
+                self.has_jumped = False
+
+    def attack_phase_2(self, wolf):
+        if not self.attacking:
+            if self.attack_timer > 0:
+                self.attack_timer -= 1
+            elif self.on_ground:
+                self.fall_speed = -12
+                self.attacking = True
+                self.movement_locked = True
+                self.has_jumped = True
+
+        elif self.attacking and self.on_ground:
+            self.attacking = False
+            self.attack_timer = self.attack_cooldown
+            self.movement_locked = False
+            self.has_jumped = False
+
+            # Lancer des projectiles à l’atterrissage
+            for i in range(10):
+                # Position légèrement aléatoire autour du haut du boss
+                spawn_x = self.rect.centerx + random.randint(-30, 30)
+                spawn_y = self.rect.bottom
+                proj_rect = pygame.Rect(spawn_x, spawn_y, 10, 10)
+
+                # Génère un angle uniquement vers le haut ou horizontal
+                valid = False
+                while not valid:
+                    angle = random.uniform(0, 2 * math.pi)
+                    speed = random.uniform(5, 9)
+                    vx = math.cos(angle) * speed
+                    vy = math.sin(angle) * speed
+
+                    if vy <= 0:  # interdit les tirs vers le bas
+                        valid = True
+
+                self.projectiles.append([proj_rect, vx, vy])
+
+    def attack_phase_3(self, wolf):
+        if not self.charging:
+            if self.charge_timer > 0:
+                self.charge_timer -= 1
+            else:
+                self.charging = True
+                self.movement_locked = True
+                self.speed = self.charge_speed
+                self.current_charge_time = 0
+        else:
+            # Charge en cours
+            self.rect.x += self.speed * self.direction
+            self.current_charge_time += 1
+
+            # Rebonds aux limites
+            if self.rect.left < 0:
+                self.rect.left = 0
+                self.direction = 1
+                self._end_charge()
+            elif self.rect.right > LEVEL_WIDTH:
+                self.rect.right = LEVEL_WIDTH
+                self.direction = -1
+                self._end_charge()
+
+            # Stop la charge si trop longue
+            elif self.current_charge_time >= self.max_charge_duration:
+                self._end_charge()
+
+
+    def _end_charge(self):
+        self.charging = False
+        self.movement_locked = False
+        self.charge_timer = self.charge_cooldown
+        self.speed = self.walk_speed  # ← on remet la vitesse normale ici
+
