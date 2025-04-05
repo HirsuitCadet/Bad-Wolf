@@ -94,6 +94,12 @@ class Charger(Animal):
         self.charge_right_images = charge_right
         self.charge_left_images = charge_left
         self.is_charging = False
+        self.flee_timer = 0
+        self.normal_speed = self.speed
+        self.flee_speed = 10
+
+
+
 
     def update(self, wolf=None):
         if not self.alive:
@@ -123,7 +129,13 @@ class Charger(Animal):
             self.frame_timer = 0
 
 
+        if self.flee_timer > 0:
+            self.flee_timer -= 1
+            if self.flee_timer == 0:
+                self.speed = self.normal_speed
+
         self.rect.x += self.speed * self.direction
+
 
         if self.rect.left < 0 or self.rect.right > 1900:
             self.direction *= -1
@@ -135,6 +147,11 @@ class Charger(Animal):
             red_overlay.fill((255, 0, 0, 100))
             self.image.blit(red_overlay, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
             self.flash_timer -= 1
+            
+    def knockback(self):
+        self.flee_timer = 10
+        self.direction *= -1
+        self.speed = self.flee_speed
 
 
 class EggProjectile:
@@ -360,6 +377,9 @@ class PigBoss(Animal):
         self.charge_right_images = charge_right
         self.charge_left_images = charge_left
         self.is_charging = False
+        self.flee_timer = 0
+
+
 
     def update(self, wolf, platforms):
         if not self.alive:
@@ -393,7 +413,12 @@ class PigBoss(Animal):
             self.frame_timer = 0
 
         # Déplacement horizontal
-        self.rect.x += self.speed * self.direction
+        if self.flee_timer > 0:
+            self.rect.x += 6 * self.direction  # vitesse de fuite
+            self.flee_timer -= 1
+        else:
+            self.rect.x += self.speed * self.direction
+
 
         # Collision avec les bords
         if self.rect.left < 0 or self.rect.right > LEVEL_WIDTH:
@@ -415,4 +440,8 @@ class PigBoss(Animal):
         wolf.hit_timer = 60
         wolf.right_images = wolf.squished_right_images
         wolf.left_images = wolf.squished_left_images
+        self.direction *= -1
+
+    def knockback(self):
+        self.flee_timer = 15
         self.direction *= -1

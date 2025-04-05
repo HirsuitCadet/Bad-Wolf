@@ -120,15 +120,15 @@ animals = [
     #Cow((1700, 700), right_images_cow, left_images_cow),
     #Pig((1500, 700), right_images_pig, left_images_pig),
     #Pig((1900, 700), right_images_pig, left_images_pig),
-    #Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
+    Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
     #Dog((800, 700)),
     #PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
 ]
-animals.append(rooster_boss)
+#animals.append(rooster_boss)
 heals = []
 speedboosts = []
 speedboost_timer = 0
-speedboosts.append(SpeedBoost((600, 700)))
+#speedboosts.append(SpeedBoost((600, 700)))
 bloods = []
 egg_explosions = []
 frame_counter = 0
@@ -136,16 +136,16 @@ frame_counter = 0
 # Plateformes
 platforms = [
     pygame.Rect(0, 800, 1900, 50),
-    pygame.Rect(200, 700, 120, 20),
-    pygame.Rect(400, 600, 100, 20),
-    pygame.Rect(600, 500, 100, 20),
-    pygame.Rect(850, 700, 150, 20),
-    pygame.Rect(1050, 600, 100, 20),
-    pygame.Rect(1250, 500, 120, 20),
-    pygame.Rect(1450, 400, 120, 20),
-    pygame.Rect(1650, 650, 100, 20),
-    pygame.Rect(1750, 550, 100, 20),
-    pygame.Rect(1800, 450, 80, 20)
+    #pygame.Rect(200, 700, 120, 20),
+    #pygame.Rect(400, 600, 100, 20),
+    #pygame.Rect(600, 500, 100, 20),
+    #pygame.Rect(850, 700, 150, 20),
+    #pygame.Rect(1050, 600, 100, 20),
+    #pygame.Rect(1250, 500, 120, 20),
+    #pygame.Rect(1450, 400, 120, 20),
+    #pygame.Rect(1650, 650, 100, 20),
+    #pygame.Rect(1750, 550, 100, 20),
+    #pygame.Rect(1800, 450, 80, 20)
 ]
 
 # HUD
@@ -236,6 +236,7 @@ while running:
                 
                 if loup_above_boss:
                     if animal.take_damage(1):
+                        animal.knockback()
                         if random.randint(1, 100) <= 20:
                             heals.append(Heal(animal.rect.center))
                         bloods.append(BloodEffect(animal.rect.center))
@@ -252,27 +253,36 @@ while running:
             continue
 
         if wolf.rect.colliderect(animal.rect) and not isinstance(animal, PigBoss):
-            if previous_bottom <= animal.rect.top and wolf.jump_speed > 0:
+            loup_above = (
+                previous_bottom <= animal.rect.top and
+                wolf.jump_speed > 0 and
+                wolf.rect.bottom <= animal.rect.top + 10
+            )
+
+            if loup_above:
                 if animal.take_damage(1):
+                    if hasattr(animal, 'knockback'):
+                        animal.knockback()
                     if random.randint(1, 100) <= 20:
                         heals.append(Heal(animal.rect.center))
                     bloods.append(BloodEffect(animal.rect.center))
                 wolf.jump_speed = -8
+
             elif wolf.hit_timer <= 0:
                 wolf.take_damage(animal)
-                animal.crush_effect(wolf)
 
+                if hasattr(animal, 'crush_effect'):
+                    animal.crush_effect(wolf)
 
-                # Knockback si c'est un Charger
                 if isinstance(animal, Charger):
-                    camera_shake = 50  # durée de la secousse en frames
-
+                    camera_shake = 50
                     wolf.jump_speed = -20
                     wolf.jumping = True
 
                 if wolf.hp <= 0:
                     game_over = True
                     running = False
+
 
     # Affichage des heals
     for heal in heals[:]:
@@ -380,9 +390,7 @@ while running:
         screen.blit(heart_image, (10 + i * 35, 10))
 
     frame_counter += 1
-    if wolf.hp <= 0:
-        game_over = True
-        running = False
+
 
     # Affichage des effets d'explosion d'œufs
     for img, pos, delay in egg_explosions[:]:
