@@ -318,23 +318,43 @@ class RoosterBoss(Animal):
         for egg in self.projectiles:
             egg.draw(screen, offset_x, offset_y)
 class Dog(Animal):
-    def __init__(self, pos):
-        self.attack_delay = 0  # timer d'attente avant saut
-        self.attacking = False  # état d'attaque
-        self.target_x = None  # position du loup enregistrée
+    def __init__(self, pos, right_walk, left_walk, jump_prep, jump_prep_left, jump_air, jump_air_left):
+        self.attack_delay = 0
+        self.attacking = False
+        self.target_x = None
         self.target_y = None
         self.vel_x = 0
         self.vel_y = 0
-        self.jump_duration = 30  # durée estimée du saut (en frames)
+        self.jump_duration = 30
 
-        surface = pygame.Surface((60, 60), pygame.SRCALPHA)
-        surface.fill((100, 100, 255))  # cube bleu
-        super().__init__(pos, [surface], [surface], speed=4, health=2)
+        self.right_walk = right_walk
+        self.left_walk = left_walk
+        self.jump_prep = jump_prep
+        self.jump_prep_left = jump_prep_left
+        self.jump_air = jump_air
+        self.jump_air_left = jump_air_left
+
+        super().__init__(pos, right_walk, left_walk, speed=4, health=2)
         self.rect = self.image.get_rect(topleft=pos)
-        self.jump_timer = random.randint(60, 180)  # entre 1 et 3 secondes
+        self.jump_timer = random.randint(60, 180)
 
     def update(self, wolf, platforms):
         super().update(platforms)
+
+        # Choix de l'image selon état
+        if self.attacking and self.attack_delay > 0:
+            self.image = self.jump_prep if self.direction > 0 else self.jump_prep_left
+        elif self.target_x is not None and not self.attacking:
+            self.image = self.jump_air if self.direction > 0 else self.jump_air_left
+        else:
+            self.images = self.right_walk if self.direction > 0 else self.left_walk
+            self.frame_timer += 1
+            if self.frame_timer >= 6:
+                self.frame = (self.frame + 1) % len(self.images)
+                self.image = self.images[self.frame]
+                self.frame_timer = 0
+
+
 
         dx = wolf.rect.centerx - self.rect.centerx
         dy = wolf.rect.centery - self.rect.centery

@@ -109,6 +109,22 @@ right_charge_pigboss = [
 ]
 left_charge_pigboss = [pygame.transform.flip(img, True, False) for img in right_charge_pigboss]
 
+# Dog sprites
+right_walk_dog = [
+    pygame.image.load("data/chien_marche1.png").convert_alpha(),
+    pygame.image.load("data/chien_marche2.png").convert_alpha(),
+    pygame.image.load("data/chien_marche3.png").convert_alpha(),
+    pygame.image.load("data/chien_marche4.png").convert_alpha()
+]
+left_walk_dog = [pygame.transform.flip(img, True, False) for img in right_walk_dog]
+
+dog_jump_prep = pygame.image.load("data/chien_prep_saut.png").convert_alpha()
+dog_jump_air = pygame.image.load("data/chien_saut.png").convert_alpha()
+dog_jump_prep_left = pygame.transform.flip(dog_jump_prep, True, False)
+dog_jump_air_left = pygame.transform.flip(dog_jump_air, True, False)
+
+
+
 
 
 # Entities
@@ -121,9 +137,9 @@ animals = [
     #Pig((1500, 700), right_images_pig, left_images_pig),
     #Pig((1900, 700), right_images_pig, left_images_pig),
     #Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
-    #Dog((800, 700)),
+    Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
     #PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
-    FinalBoss((500, 700)),
+    #FinalBoss((500, 700)),
 ]
 #animals.append(rooster_boss)
 heals = []
