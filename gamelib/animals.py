@@ -1,8 +1,7 @@
-
 import pygame
 import random
-import time
 import math
+from gamelib.effects import EggProjectile
 
 LEVEL_WIDTH = 1900
 
@@ -74,6 +73,14 @@ class Animal:
             self.rect.height = 0
             return True
         return False
+    
+    def get_blood_position(self):
+        visible_height = self.image.get_height()
+        x = self.rect.left + self.image.get_width() // 2
+        y = self.rect.top + visible_height - visible_height // 4
+        return (x, y)
+
+
 
 class Chicken(Animal):
     def __init__(self, pos, right_images, left_images):
@@ -95,9 +102,9 @@ class Charger(Animal):
         self.charge_right_images = charge_right
         self.charge_left_images = charge_left
         self.is_charging = False
-        self.flee_timer = 0
+        #self.flee_timer = 0
         self.normal_speed = self.speed
-        self.flee_speed = 10
+        #self.flee_speed = 10
 
 
 
@@ -130,10 +137,10 @@ class Charger(Animal):
             self.frame_timer = 0
 
 
-        if self.flee_timer > 0:
-            self.flee_timer -= 1
-            if self.flee_timer == 0:
-                self.speed = self.normal_speed
+        #if self.flee_timer > 0:
+        #    self.flee_timer -= 1
+        #    if self.flee_timer == 0:
+        #        self.speed = self.normal_speed
 
         self.rect.x += self.speed * self.direction
 
@@ -149,31 +156,10 @@ class Charger(Animal):
             self.image.blit(red_overlay, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
             self.flash_timer -= 1
             
-    def knockback(self):
-        self.flee_timer = 10
-        self.direction *= -1
-        self.speed = self.flee_speed
-
-
-class EggProjectile:
-    def __init__(self, pos, direction):
-        self.image = pygame.image.load("data/oeuf.png").convert_alpha()
-        self.rect = self.image.get_rect(center=pos)
-        self.speed_x = 6 * direction[0]
-        self.speed_y = 5 * direction[1]
-        self.gravity = 0.3 if direction[1] != 0 else 0
-        self.alive = True
-
-    def update(self):
-        self.rect.x += self.speed_x
-        self.rect.y += self.speed_y
-        self.speed_y += self.gravity
-
-        if self.rect.right < 0 or self.rect.left > 2000 or self.rect.top > 1200:
-            self.alive = False
-
-    def draw(self, screen, offset_x, offset_y):
-        screen.blit(self.image, self.rect.move(-offset_x, -offset_y))
+    #def knockback(self):
+        #self.flee_timer = 10
+        #self.direction *= -1
+        #elf.speed = self.flee_speed
 
 class RoosterBoss(Animal):
     def __init__(self, pos, right_images, left_images):
@@ -208,11 +194,11 @@ class RoosterBoss(Animal):
         self.image = self.right_images[0]
         self.rect = self.image.get_rect(topleft=pos)
 
-    def update(self, wolf_rect=None, wolf=None, effects=None):
+    def update(self, wolf_rect=None, wolf=None, effects=None, current_frame=None):
         if not self.alive:
             for egg in self.projectiles:
                 egg.update()
-            self.projectiles = [e for e in self.projectiles if e.alive]
+            self.projectiles = [e for e in self.projectiles if not e.finished]
             return
 
         self.speed = self.flee_speed if self.flee_timer > 0 else self.normal_speed
@@ -253,63 +239,29 @@ class RoosterBoss(Animal):
         if self.shooting:
             self.shoot_timer -= 1
             if self.shoot_timer <= 0:
-                self.projectiles.append(EggProjectile(self.rect.center, self.shoot_direction))
+                egg = EggProjectile(self.rect.center, self.shoot_direction, self.explosion_frames)
+                self.projectiles.append(egg)
                 self.shooting = False
         else:
             self.shoot_interval -= 1
             if self.shoot_interval <= 0:
-                prob_map = {3: 30, 2: 60, 1: 90}
-                shoot_chance = prob_map.get(self.health, 90)
-                if random.randint(1, 100) <= shoot_chance:
-                    if wolf_rect and abs(self.rect.centerx - wolf_rect.centerx) < 400:
-                        dir_x = 1 if wolf_rect.centerx > self.rect.centerx else -1
-                        dir_y = random.choice([0, -1])
-                        self.shoot_direction = (dir_x, dir_y)
-                        self.shooting = True
-                        self.shoot_timer = self.pre_attack_duration
+                if wolf_rect and abs(self.rect.centerx - wolf_rect.centerx) < 400:
+                    dir_x = 1 if wolf_rect.centerx > self.rect.centerx else -1
+                    dir_y = random.choice([0, -1])
+                    self.shoot_direction = (dir_x, dir_y)
+                    self.shooting = True
+                    self.shoot_timer = self.pre_attack_duration
                 cooldown_map = {3: 90, 2: 60, 1: 30}
                 base_cd = cooldown_map.get(self.health, 30)
                 self.shoot_interval = base_cd + random.randint(0, 20)
 
-        for egg in self.projectiles[:]:
+        for egg in self.projectiles:
             egg.update()
-            if wolf and egg.rect.colliderect(wolf.rect):
-                egg.alive = False
-                if wolf.hit_timer <= 0:
-                    wolf.hp -= 1
-                    wolf.hit_timer = 60
-                    if effects is not None:
-                        for i, frame in enumerate(self.explosion_frames):
-                            rect = frame.get_rect(center=egg.rect.center)
-                            effects.append((frame, rect.topleft, i * 3))
-        self.projectiles = [e for e in self.projectiles if e.alive]
+            if wolf and egg.rect.colliderect(wolf.rect) and not egg.exploding:
+                egg.explode()
+                wolf.projectile_damage()
 
-    def take_damage(self, amount, wolf_rect=None, current_frame=None, effects=None):
-        if self.invincibility_timer > 0:
-            return False
-
-        if current_frame is not None and current_frame - self.last_damage_frame < 20:
-            return False
-
-        self.last_damage_frame = current_frame if current_frame is not None else 0
-
-        self.health -= amount
-        self.flash_timer = 6
-        self.invincibility_timer = 30
-        self.flee_timer = 20
-
-        if self.health <= 0:
-            self.alive = False
-            if effects is not None:
-                blood_surface = pygame.Surface((60, 60), pygame.SRCALPHA)
-                pygame.draw.circle(blood_surface, (180, 0, 0, 160), (30, 30), 30)
-                effects.append((blood_surface, self.rect.center))
-            return True
-
-        if wolf_rect:
-            self.direction = 1 if wolf_rect.centerx < self.rect.centerx else -1
-
-        return False
+        self.projectiles = [egg for egg in self.projectiles if not egg.finished]
 
     def draw(self, screen, offset_x, offset_y):
         if self.alive:
@@ -317,6 +269,7 @@ class RoosterBoss(Animal):
             screen.blit(image, self.rect.move(-offset_x, -offset_y))
         for egg in self.projectiles:
             egg.draw(screen, offset_x, offset_y)
+
 class Dog(Animal):
     def __init__(self, pos, right_walk, left_walk, jump_prep, jump_prep_left, jump_air, jump_air_left):
         self.attack_delay = 0
@@ -398,9 +351,7 @@ class PigBoss(Animal):
         self.charge_right_images = charge_right
         self.charge_left_images = charge_left
         self.is_charging = False
-        self.flee_timer = 0
-
-
+        self.custom_animation = True
 
     def update(self, wolf, platforms):
         if not self.alive:
@@ -427,18 +378,20 @@ class PigBoss(Animal):
             self.images = self.walk_right_images if self.direction > 0 else self.walk_left_images
 
         # Animation
-        self.frame_timer += 1
-        if self.frame_timer >= 15:
+        if self.frame_timer >= 6 and not hasattr(self, 'custom_animation'):
             self.frame = (self.frame + 1) % len(self.images)
+            bottom = self.rect.bottom
+            centerx = self.rect.centerx
             self.image = self.images[self.frame]
+            self.rect = self.image.get_rect(midbottom=(centerx, bottom)) 
             self.frame_timer = 0
 
         # Déplacement horizontal
-        if self.flee_timer > 0:
-            self.rect.x += 6 * self.direction  # vitesse de fuite
-            self.flee_timer -= 1
-        else:
-            self.rect.x += self.speed * self.direction
+        #if self.flee_timer > 0:
+        #    self.rect.x += 6 * self.direction  # vitesse de fuite
+        #    self.flee_timer -= 1
+        #else:
+         #   self.rect.x += self.speed * self.direction
 
 
         # Collision avec les bords
@@ -486,7 +439,6 @@ class FinalBoss(Animal):
 
         self.projectiles = []  # Liste de projectiles de phase 2 (rect, vx, vy)
 
-
         super().__init__(pos, self.phase_images[1], self.phase_images[1], speed=2, health=6)
         self.direction = 1
         self.phase_changed = False
@@ -507,10 +459,6 @@ class FinalBoss(Animal):
         self.max_charge_duration = 60  # durée max de la charge en frames
         self.walk_speed = 5  # vitesse normale
         self.speed = self.walk_speed  # valeur par défaut
-
-
-
-
 
     def update(self, wolf=None, platforms=None):
         if not self.alive:
@@ -542,8 +490,6 @@ class FinalBoss(Animal):
 
             self.rect.x += self.speed * self.direction
 
-
-
         # Empêche le boss de sortir du niveau
         if self.rect.left < 0:
             self.rect.left = 0
@@ -551,7 +497,6 @@ class FinalBoss(Animal):
         elif self.rect.right > 1550:
             self.rect.right = 1550
             self.direction = -1
-
 
         # phase update
         if self.health <= 4 and self.phase == 1:
@@ -596,7 +541,6 @@ class FinalBoss(Animal):
         if self.phase == 3:
             self.attack_phase_3(wolf)
 
-
         # Gestion visuelle de la zone d'attaque au sol
         if self.attack_zone_active:
             self.attack_zone_duration -= 1
@@ -613,11 +557,8 @@ class FinalBoss(Animal):
             rect.y += vy
             proj[2] = vy  # on met à jour le vy dans la liste
 
-
         # Supprime les projectiles trop bas
         self.projectiles = [p for p in self.projectiles if p[0].y < 2000]
-
-
 
     def attack_phase_1(self, wolf):
         if not self.attacking:
@@ -701,7 +642,6 @@ class FinalBoss(Animal):
             # Stop la charge si trop longue
             elif self.current_charge_time >= self.max_charge_duration:
                 self._end_charge()
-
 
     def _end_charge(self):
         self.charging = False

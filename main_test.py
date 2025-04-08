@@ -1,10 +1,9 @@
 import pygame
 import random
+import gamelib.animals as animals
 from gamelib.sprites import Wolf
-from gamelib.animals import *
 from gamelib.items import Heal, SpeedBoost
 from gamelib.effects import BloodEffect
-from gamelib.animals import PigBoss
 
 
 pygame.init()
@@ -62,9 +61,9 @@ right_images_chicken = [
 left_images_chicken = [pygame.transform.flip(img, True, False) for img in right_images_chicken]
 
 # Rooster boss
-#rooster_boss = RoosterBoss((1000, 700), [pygame.Surface((80, 80))], [pygame.Surface((80, 80))])
-#rooster_boss.right_images[0].fill((255, 255, 255))
-#rooster_boss.left_images[0].fill((255, 255, 255))
+rooster_boss = animals.RoosterBoss((1000, 700), [pygame.Surface((80, 80))], [pygame.Surface((80, 80))])
+rooster_boss.right_images[0].fill((255, 255, 255))
+rooster_boss.left_images[0].fill((255, 255, 255))
 
 #Cow sprites
 right_images_cow = [
@@ -123,29 +122,25 @@ dog_jump_air = pygame.image.load("data/chien_saut.png").convert_alpha()
 dog_jump_prep_left = pygame.transform.flip(dog_jump_prep, True, False)
 dog_jump_air_left = pygame.transform.flip(dog_jump_air, True, False)
 
-
-
-
-
 # Entities
 wolf = Wolf((150, 700))
-animals = [
-    #Chicken((1000, 700), right_images_chicken, left_images_chicken),
-    #Chicken((1500, 700), right_images_chicken, left_images_chicken),
-    #Cow((1200, 700), right_images_cow, left_images_cow),
-    #Cow((1700, 700), right_images_cow, left_images_cow),
-    #Pig((1500, 700), right_images_pig, left_images_pig),
-    #Pig((1900, 700), right_images_pig, left_images_pig),
-    #Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
-    Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
-    #PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
-    #FinalBoss((500, 700)),
+liste_animals = [
+    animals.Chicken((1000, 700), right_images_chicken, left_images_chicken),
+    animals.Chicken((1500, 700), right_images_chicken, left_images_chicken),
+    animals.Cow((1200, 700), right_images_cow, left_images_cow),
+    animals.Cow((1700, 700), right_images_cow, left_images_cow),
+    animals.Pig((1500, 700), right_images_pig, left_images_pig),
+    animals.Pig((1900, 700), right_images_pig, left_images_pig),
+    animals.Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
+    animals.Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
+    animals.PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
+    animals.FinalBoss((500,700))
 ]
-#animals.append(rooster_boss)
+liste_animals.append(rooster_boss)
 heals = []
 speedboosts = []
 speedboost_timer = 0
-#speedboosts.append(SpeedBoost((600, 700)))
+speedboosts.append(SpeedBoost((600, 700)))
 bloods = []
 egg_explosions = []
 frame_counter = 0
@@ -196,6 +191,7 @@ while waiting:
     pygame.display.flip()
     clock.tick(60)
 
+
 while running:
 
     screen.fill((135, 206, 235))
@@ -235,12 +231,12 @@ while running:
 
     # Interactions avec animaux
     
-    for animal in animals:
-        if isinstance(animal, RoosterBoss):
+    for animal in liste_animals:
+        if isinstance(animal, animals.RoosterBoss):
             animal.update(wolf.rect, wolf, bloods)
-        elif isinstance(animal, Charger):
+        elif isinstance(animal, animals.Charger):
             animal.update(wolf)
-        elif isinstance(animal, FinalBoss):
+        elif isinstance(animal, animals.FinalBoss):
             animal.update(wolf, platforms)
 
             if animal.charging and wolf.rect.colliderect(animal.rect) and wolf.hit_timer <= 0:
@@ -286,9 +282,9 @@ while running:
 
 
 
-        elif isinstance(animal, Dog):
+        elif isinstance(animal, animals.Dog):
             animal.update(wolf, platforms)
-        elif isinstance(animal, PigBoss):
+        elif isinstance(animal, animals.PigBoss):
             animal.update(wolf=wolf, platforms=platforms)
             if wolf.rect.colliderect(animal.rect):
                 loup_above_boss = (
@@ -311,11 +307,10 @@ while running:
         else:
             animal.update(platforms)
 
-
         if not animal.alive:
             continue
 
-        if wolf.rect.colliderect(animal.rect) and not isinstance(animal, PigBoss) and not isinstance(animal, FinalBoss):
+        if wolf.rect.colliderect(animal.rect) and not isinstance(animal, animals.PigBoss) and not isinstance(animal, animals.FinalBoss):
             loup_above = (
                 previous_bottom <= animal.rect.top and
                 wolf.jump_speed > 0 and
@@ -324,28 +319,34 @@ while running:
 
             if loup_above:
                 if animal.take_damage(1):
-                    if hasattr(animal, 'knockback'):
-                        animal.knockback()
-                    if random.randint(1, 100) <= 20:
-                        heals.append(Heal(animal.rect.center))
-                    bloods.append(BloodEffect(animal.rect.center))
+                    # Si on est dans les 20% de chance
+                    if random.randint(1,100) <= 20:
+                        # Drop un os avec de la viande au bout 
+                        heal_x = animal.rect.centerx
+                        heal_y = animal.rect.centery  # pour poser au sol, ajustable selon taille du sprite
+                        heals.append(Heal((heal_x, heal_y)))
+
+                    # Calcul dynamique du point d’impact en bas du mob
+                    if isinstance(animal, animals.PigBoss):
+                        print("PigBoss rect:", animal.rect)
+                        print("Blood position:", animal.get_blood_position())
+
+                    bloods.append(BloodEffect(animal.get_blood_position()))
+
+
                 wolf.jump_speed = -8
 
             elif wolf.hit_timer <= 0:
                 wolf.take_damage(animal)
-
-                if hasattr(animal, 'crush_effect'):
+                if isinstance(animal, animals.PigBoss):
                     animal.crush_effect(wolf)
 
-                if isinstance(animal, Charger):
-                    camera_shake = 50
+                # Knockback si c'est un Charger
+                if isinstance(animal, animals.Charger):
+                    camera_shake = 50  # durée de la secousse en frames
+
                     wolf.jump_speed = -20
                     wolf.jumping = True
-
-                if wolf.hp <= 0:
-                    game_over = True
-                    running = False
-
 
     # Affichage des heals
     for heal in heals[:]:
@@ -360,7 +361,6 @@ while running:
         # Disparition naturelle
         elif heal.timer <= 0:
             heals.remove(heal)
-
     
     # Affichage et ramassage des SpeedBoosts
     for boost in speedboosts[:]:
@@ -399,7 +399,6 @@ while running:
             if blood.finished:
                 bloods.remove(blood)
 
-
     # Scroll horizontal
     if wolf.rect.right > camera_offset + SCREEN_WIDTH:
         if camera_offset + SCREEN_WIDTH < LEVEL_WIDTH:
@@ -420,7 +419,7 @@ while running:
     for plat in platforms:
         pygame.draw.rect(screen, (100, 100, 100), plat.move(-camera_offset, -camera_y))
 
-    for animal in animals:
+    for animal in liste_animals:
         animal.draw(screen, camera_offset, camera_y)
 
     wolf.update()
@@ -445,22 +444,24 @@ while running:
         camera_shake -= 1
 
     screen.blit(wolf.image, wolf.rect.move(-camera_offset, -camera_y))
-    
-    #rooster_boss.update(wolf.rect, wolf, egg_explosions)
-    #rooster_boss.draw(screen, camera_offset, camera_y)
+    rooster_boss.update(wolf.rect, wolf, egg_explosions, frame_counter)
+    rooster_boss.draw(screen, camera_offset, camera_y)
 
     for i in range(wolf.hp):
         screen.blit(heart_image, (10 + i * 35, 10))
 
     frame_counter += 1
 
-
     # Affichage des effets d'explosion d'œufs
-    for img, pos, delay in egg_explosions[:]:
-        if frame_counter >= delay:
-            screen.blit(img, (pos[0] - img.get_width() // 2 - camera_offset,
-                            pos[1] - img.get_height() // 2 - camera_y))
-            egg_explosions.remove((img, pos, delay))
+    for explosion in egg_explosions[:]:
+        explosion.update()
+        explosion.draw(screen, camera_offset, camera_y)
+        if explosion.finished:
+            egg_explosions.remove(explosion)
+
+    if wolf.hp <= 0:
+        game_over = True
+        running = False
 
     pygame.display.flip()
     clock.tick(60)
@@ -491,4 +492,3 @@ if game_over:
         clock.tick(60)
 
 pygame.quit()
-

@@ -36,7 +36,6 @@ class Wolf(pygame.sprite.Sprite):
         self.squished_sit_image_right = pygame.transform.scale(self.sit_image_right, (self.sit_image_right.get_width(), int(self.sit_image_right.get_height() * 0.6)))
         self.squished_sit_image_left = pygame.transform.scale(self.sit_image_left, (self.sit_image_left.get_width(), int(self.sit_image_left.get_height() * 0.6)))
 
-
     def move(self, dx, dy):
         self.rect.x += dx
         self.rect.y += dy
@@ -57,6 +56,13 @@ class Wolf(pygame.sprite.Sprite):
                 self.knockback_direction = 1
             else:
                 self.knockback_direction = -1
+
+    def projectile_damage(self):
+        if self.hit_timer <= 0:
+            self.health -= 1
+            self.hp = self.health
+            self.hit_timer = 180  
+            self.flash_timer = 6  
 
     def heal(self):
         self.health += 1
