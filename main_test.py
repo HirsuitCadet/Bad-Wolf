@@ -6,6 +6,8 @@ from gamelib.items import Heal, SpeedBoost
 from gamelib.effects import BloodEffect
 
 
+
+
 pygame.init()
 
 # Config 
@@ -125,17 +127,17 @@ dog_jump_air_left = pygame.transform.flip(dog_jump_air, True, False)
 # Entities
 wolf = Wolf((150, 700))
 liste_animals = [
-    animals.Chicken((1000, 700), right_images_chicken, left_images_chicken),
-    animals.Chicken((1500, 700), right_images_chicken, left_images_chicken),
-    animals.Cow((1200, 700), right_images_cow, left_images_cow),
-    animals.Cow((1700, 700), right_images_cow, left_images_cow),
-    animals.Pig((1500, 700), right_images_pig, left_images_pig),
-    animals.Pig((1900, 700), right_images_pig, left_images_pig),
-    animals.Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
-    animals.Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
-    animals.PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
-    animals.FinalBoss((500,700))
-]
+    #animals.Chicken((1000, 700), right_images_chicken, left_images_chicken),
+    #animals.Chicken((1500, 700), right_images_chicken, left_images_chicken),
+    #animals.Cow((1200, 700), right_images_cow, left_images_cow),
+    #animals.Cow((1700, 700), right_images_cow, left_images_cow),
+    #animals.Pig((1500, 700), right_images_pig, left_images_pig),
+    #animals.Pig((1900, 700), right_images_pig, left_images_pig),
+    #animals.Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
+    #animals.Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
+    #animals.PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
+    #animals.FinalBoss((500,700))
+    animals.BossFemme((1300, 700))]
 liste_animals.append(rooster_boss)
 heals = []
 speedboosts = []
@@ -169,16 +171,12 @@ running = True
 title_font = pygame.font.Font(None, 80)
 info_font = pygame.font.Font(None, 40)
 
-title_text = title_font.render("BAD WOLF", True, (255, 255, 255))
-prompt_text = info_font.render("Appuie sur ENTREE pour commencer", True, (200, 200, 200))
 
 waiting = True
 while waiting:
     start_img = pygame.image.load("data/start_screen.png").convert()
     start_img = pygame.transform.scale(start_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
     screen.blit(start_img, (0, 0))
-    screen.blit(title_text, (SCREEN_WIDTH // 2 - title_text.get_width() // 2, SCREEN_HEIGHT // 2 - 100))
-    screen.blit(prompt_text, (SCREEN_WIDTH // 2 - prompt_text.get_width() // 2, SCREEN_HEIGHT // 2 + 20))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -236,29 +234,34 @@ while running:
             animal.update(wolf.rect, wolf, bloods)
         elif isinstance(animal, animals.Charger):
             animal.update(wolf)
+        elif isinstance(animal, animals.BossFemme):
+            animal.update(wolf, platforms)
+            
+            to_remove = []
+            for proj in animal.projectiles:
+                if wolf.rect.colliderect(proj.rect) and wolf.hit_timer <= 0:
+                    wolf.take_damage(animal)
+                    to_remove.append(proj)
+
+            # Supprime les projectiles qui ont touché le loup
+            for proj in to_remove:
+                animal.projectiles.remove(proj)
         elif isinstance(animal, animals.FinalBoss):
             animal.update(wolf, platforms)
-
             if animal.charging and wolf.rect.colliderect(animal.rect) and wolf.hit_timer <= 0:
                 wolf.take_damage(animal)
                 camera_shake = 30
-
             for proj in animal.projectiles:
                 rect, vx, vy = proj
                 pygame.draw.rect(screen, (255, 255, 0), rect.move(-camera_offset, -camera_y))
-
                 if rect.colliderect(wolf.rect) and wolf.hit_timer <= 0:
                     wolf.take_damage(animal)
-
-
             loup_above = (
                     previous_bottom <= animal.rect.top and
                     wolf.jump_speed > 0 and
                     wolf.rect.bottom <= animal.rect.top + 10
                 )
-
             if wolf.rect.colliderect(animal.rect):
-                
 
                 if loup_above:
                     if animal.take_damage(1):
@@ -267,7 +270,6 @@ while running:
 
                 elif wolf.hit_timer <= 0 and not animal.attack_zone_active:
                         wolf.take_damage(animal)
-                
             # Zone d’impact (attaque au sol)
             if animal.attack_zone_active:
                 zone_rect = pygame.Rect(animal.rect.centerx - 120, animal.rect.bottom - 20, 240, 20)
@@ -279,8 +281,6 @@ while running:
                     and wolf.hit_timer <= 0
                 ):
                     wolf.take_damage(animal)
-
-
 
         elif isinstance(animal, animals.Dog):
             animal.update(wolf, platforms)
@@ -470,16 +470,11 @@ if game_over:
     title_font = pygame.font.Font(None, 80)
     info_font = pygame.font.Font(None, 40)
 
-    over_text = title_font.render("GAME OVER", True, (255, 0, 0))
-    retry_text = info_font.render("Appuie sur ÉCHAP pour quitter", True, (255, 255, 255))
-
     waiting = True
     while waiting:
         gameover_img = pygame.image.load("data/gameover_screen.png").convert()
         gameover_img = pygame.transform.scale(gameover_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
         screen.blit(gameover_img, (0, 0))
-        screen.blit(over_text, (SCREEN_WIDTH // 2 - over_text.get_width() // 2, SCREEN_HEIGHT // 2 - 100))
-        screen.blit(retry_text, (SCREEN_WIDTH // 2 - retry_text.get_width() // 2, SCREEN_HEIGHT // 2 + 20))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
