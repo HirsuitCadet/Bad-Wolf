@@ -474,6 +474,7 @@ class FinalBoss(Animal):
 
         self.attacking = False
         self.attack_cooldown = 180  # frames entre les attaques (~3 secondes)
+        self.attack_cooldown_4 = 60
         self.attack_timer = 0
         self.attack_zone_active = False
         self.attack_zone_duration = 60  # durée visible de l'attaque de zone
@@ -706,41 +707,32 @@ class FinalBoss(Animal):
         self.speed = self.walk_speed  # ← on remet la vitesse normale ici
 
     def attack_phase_4(self, wolf):
-        if self.attack_timer > 0:
-            self.attack_timer -= 1
-            return
+        self.speed = 7
 
-        if self.current_phase4_action is None and not self.attacking and not self.charging and self.attack_timer <= 0 and self.charge_timer <= 0:
-            self.current_phase4_action = random.choice(['zone', 'projectiles', 'charge'])
-            self.phase4_action_done = False
+        if self.current_phase4_action is None:
+            if self.attack_timer > 0:
+                self.attack_timer -= 1
+            else:
+                self.current_phase4_action = random.choice(["phase_1", "phase_2", "phase_3"])
+                self.attacking = False
+                self.charging = False
+                self.movement_locked = False
+                self.has_jumped = False
+                self.current_charge_time = 0
+                self.charge_timer = 0
+        else:
+            # Appelle dynamiquement la méthode de la phase choisie
+            if self.current_phase4_action == "phase_1":
+                self.attack_phase_1(wolf)
+            elif self.current_phase4_action == "phase_2":
+                self.attack_phase_2(wolf)
+            elif self.current_phase4_action == "phase_3":
+                self.attack_phase_3(wolf)
 
-        if self.current_phase4_action == 'zone':
-            original_phase = self.phase
-            self.phase = 1
-            self.attack_phase_1(wolf)
-            self.phase = original_phase
-            if not self.attacking and not self.has_jumped and not self.attack_zone_active:
-                self.phase4_action_done = True
-
-        elif self.current_phase4_action == 'projectiles':
-            original_phase = self.phase
-            self.phase = 2
-            self.attack_phase_2(wolf)
-            self.phase = original_phase
-            if not self.attacking and not self.has_jumped:
-                self.phase4_action_done = True
-
-        elif self.current_phase4_action == 'charge':
-            original_phase = self.phase
-            self.phase = 3
-            self.attack_phase_3(wolf)
-            self.phase = original_phase
-            if not self.charging:
-                self.phase4_action_done = True
-
-        if self.phase4_action_done:
-            self.current_phase4_action = None
-            self.attack_timer = self.attack_cooldown
+            # Une fois l’attaque terminée, on reset
+            if not self.attacking and not self.charging:
+                self.current_phase4_action = None
+                self.attack_timer = self.attack_cooldown_4
 
 
 class BossFemme(Animal):
