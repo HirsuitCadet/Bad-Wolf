@@ -266,7 +266,7 @@ while running:
     
     for animal in liste_animals:
         if isinstance(animal, animals.RoosterBoss):
-            animal.update(wolf.rect, wolf, bloods)
+            animal.update(wolf.rect, wolf, platforms)
         elif isinstance(animal, animals.Charger):
             animal.update(wolf)
         elif isinstance(animal, animals.BossFemme):

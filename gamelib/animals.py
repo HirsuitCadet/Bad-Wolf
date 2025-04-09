@@ -197,6 +197,21 @@ class RoosterBoss(Animal):
             self.projectiles = [e for e in self.projectiles if not e.finished]
             return
 
+        # Gravité
+        self.fall_speed += self.gravity
+        self.rect.y += self.fall_speed
+
+        # Collisions avec les plateformes (comme dans Animal)
+        self.on_ground = False
+        if effects:  # on t'utilise déjà `effects` pour les bloods → c’est ta liste de plateformes
+            for plat in effects:
+                if self.rect.colliderect(plat):
+                    if self.fall_speed >= 0 and self.rect.bottom <= plat.bottom:
+                        self.rect.bottom = plat.top
+                        self.fall_speed = 0
+                        self.on_ground = True
+
+
         if self.flash_timer > 0:
             self.flee_timer = 30
 
@@ -223,9 +238,10 @@ class RoosterBoss(Animal):
             self.frame_timer += 1
             if self.frame_timer >= 6:
                 self.frame = (self.frame + 1) % len(self.images)
-                self.image = self.images[self.frame]
+                
                 self.frame_timer = 0
-                self.rect = self.image.get_rect(topleft=self.rect.topleft)
+                self.set_image(self.images[self.frame])
+
 
         if self.flash_timer > 0:
             self.image = self.image.copy()
@@ -269,15 +285,19 @@ class RoosterBoss(Animal):
             
             if self.shooting:
                 if self.shoot_timer > 5:
-                    image = self.charge_right if self.direction > 0 else self.charge_left
+                    self.set_image(self.charge_right if self.direction > 0 else self.charge_left)
                 else:
-                    image = self.shoot_right if self.direction > 0 else self.shoot_left
-            else:
-                image = self.image
+                    self.set_image(self.shoot_right if self.direction > 0 else self.shoot_left)
 
-            screen.blit(image, self.rect.move(-offset_x, -offset_y))
+            screen.blit(self.image, self.rect.move(-offset_x, -offset_y))
         for egg in self.projectiles:
             egg.draw(screen, offset_x, offset_y)
+
+    def set_image(self, new_image):
+        old_midbottom = self.rect.midbottom
+        self.image = new_image
+        self.rect = self.image.get_rect(midbottom=old_midbottom)
+        
 
 class Dog(Animal):
     def __init__(self, pos, right_walk, left_walk, jump_prep, jump_prep_left, jump_air, jump_air_left):
