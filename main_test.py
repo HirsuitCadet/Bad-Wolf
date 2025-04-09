@@ -299,7 +299,6 @@ while running:
                 animal.projectiles.remove(proj)
         elif isinstance(animal, animals.FinalBoss):
             animal.update(wolf, platforms)
-            # ... (le reste de la gestion FinalBoss, inchangé)
         elif isinstance(animal, animals.Dog):
             animal.update(wolf, platforms)
         elif isinstance(animal, animals.PigBoss):
@@ -431,6 +430,7 @@ while running:
 
     wolf.update()
 
+#CODE FAIT AVEC CHATGPT#################### 
     # Gestion du ralentissement temporaire par le boss cochon
     if hasattr(wolf, 'slowed_timer') and wolf.slowed_timer > 0:
         wolf.slowed_timer -= 1
@@ -451,6 +451,7 @@ while running:
         camera_shake -= 1
 
     screen.blit(wolf.image, wolf.rect.move(-camera_offset, -camera_y))
+    ###########################################""
 
     for i in range(wolf.max_health):
         image = heart_image if i < wolf.hp else heart_empty

@@ -70,6 +70,7 @@ class EggProjectile:
         elif not self.exploding:
             screen.blit(self.image, self.rect.move(-offset_x, -offset_y))
 
+#CODE FAIT AVEC CHATGPT######################################
 class HomingProjectile:
     def __init__(self, start_pos, target_pos):
         self.original_image = pygame.image.load("data/claquette.png").convert_alpha()
@@ -110,3 +111,5 @@ class HomingProjectile:
             rotated = pygame.transform.rotate(self.original_image, self.angle)
             new_rect = rotated.get_rect(center=self.rect.center)
             screen.blit(rotated, new_rect.move(-offset_x, -offset_y))
+
+#############################################################

@@ -25,6 +25,7 @@ class SpeedBoost:
     def draw(self, screen, offset_x, offset_y):
         screen.blit(self.image, self.rect.move(-offset_x, -offset_y))
 
+#CODE FAIT AVEC CHATGPT############
 class MovingPlatform:
     def __init__(self, x, y, width, height, dx=2, range_x=100):
         self.rect = pygame.Rect(x, y, width, height)
@@ -39,3 +40,5 @@ class MovingPlatform:
 
     def draw(self, screen, offset_x, offset_y):
         pygame.draw.rect(screen, (150, 100, 100), self.rect.move(-offset_x, -offset_y))  # couleur différente
+
+#########################################

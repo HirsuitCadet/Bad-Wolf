@@ -94,6 +94,7 @@ class Pig(Animal):
     def __init__(self, pos, right_images, left_images):
         super().__init__(pos, right_images, left_images, speed=2, health=2)
 
+#CODE FAIT AVEC CHATGPT##########################
 class Charger(Animal):
     def __init__(self, pos, walk_right, walk_left, charge_right, charge_left):
         super().__init__(pos, walk_right, walk_left, speed=3, health=3)
@@ -146,6 +147,7 @@ class Charger(Animal):
             red_overlay.fill((255, 0, 0, 100))
             self.image.blit(red_overlay, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
             self.flash_timer -= 1
+    ##############################################
 
     def take_damage(self, amount):
         result = super().take_damage(amount)  # applique la logique de base (flash, invincibilité, mort)
@@ -337,7 +339,7 @@ class Dog(Animal):
                 self.frame_timer = 0
 
 
-
+        #CODE FAIT AVEC CHATGPT####################################
         dx = wolf.rect.centerx - self.rect.centerx
         dy = wolf.rect.centery - self.rect.centery
 
@@ -375,7 +377,7 @@ class Dog(Animal):
                     self.target_x = None
                     self.target_y = None
                     self.speed = 4
-
+##################################################
 
 class PigBoss(Animal):
     def __init__(self, pos, walk_right, walk_left, charge_right, charge_left):
@@ -428,6 +430,7 @@ class PigBoss(Animal):
         else:
             self.images = self.walk_right_images if self.direction > 0 else self.walk_left_images
 
+#CODE FAIT AVEC CHATGPT############################
         # Animation
         if self.frame_timer >= 6 and not hasattr(self, 'custom_animation'):
             self.frame = (self.frame + 1) % len(self.images)
@@ -458,6 +461,7 @@ class PigBoss(Animal):
         wolf.right_images = wolf.squished_right_images
         wolf.left_images = wolf.squished_left_images
         self.direction *= -1
+##############################################################
 
     def knockback(self):
         self.flee_timer = 15
@@ -465,20 +469,6 @@ class PigBoss(Animal):
 
 class FinalBoss(Animal):
     def __init__(self, pos, walk_right, walk_left, jump_start_right, jump_start_left, jump_air_right, jump_air_left, attack_ground_right, attack_ground_left):
-        # 3 phases : rouge, orange, violet
-        self.phase = 1
-        surface1 = pygame.Surface((50, 50), pygame.SRCALPHA)
-        surface1.fill((255, 0, 0))  # Phase 1 : rouge
-        surface2 = pygame.Surface((50, 50), pygame.SRCALPHA)
-        surface2.fill((255, 165, 0))  # Phase 2 : orange
-        surface3 = pygame.Surface((50, 50), pygame.SRCALPHA)
-        surface3.fill((138, 43, 226))  # Phase 3 : violet
-
-        self.phase_images = {
-            1: [surface1],
-            2: [surface2],
-            3: [surface3]
-        }
 
         self.projectiles = []  # Liste de projectiles de phase 2 (rect, vx, vy)
 
@@ -571,7 +561,7 @@ class FinalBoss(Animal):
         elif self.health <= 1 and self.phase == 3:
             self.phase = 4
             self.right_images = self.left_images = self.phase_images[3]
-            self.speed = 5  # optionnel : vitesse plus élevée
+            self.speed = 5 
 
 
         # Sélection dynamique du sprite
@@ -629,6 +619,8 @@ class FinalBoss(Animal):
                 self.attack_zone_duration = 60
                 self.movement_locked = False
 
+#CODE FAIT AVEC CHATGPT##################################
+
         # Mise à jour des projectiles (rebondit vers le bas)
         for proj in self.projectiles:
             rect, vx, vy = proj
@@ -640,6 +632,8 @@ class FinalBoss(Animal):
         # Supprime les projectiles trop bas
         self.projectiles = [p for p in self.projectiles if p[0].y < 2000]
 
+#######################################################################
+
     def set_image(self, new_image):
         old_midbottom = self.rect.midbottom
         self.image = new_image
@@ -650,11 +644,11 @@ class FinalBoss(Animal):
             if self.attack_timer > 0:
                 self.attack_timer -= 1
             elif self.on_ground:
-                # Déclenche un saut vertical
+                # Saut vertical
                 self.fall_speed = -20
                 self.attacking = True
                 self.movement_locked = True
-                self.has_jumped = True  # nouvelle variable pour suivre le saut
+                self.has_jumped = True 
 
         elif self.attacking:
             # On attend que le boss soit revenu au sol pour frapper
@@ -681,6 +675,8 @@ class FinalBoss(Animal):
             self.movement_locked = False
             self.has_jumped = False
 
+#CODE FAIT AVEC CHATGPT##############################
+
             # Lancer des projectiles à l’atterrissage
             for i in range(10):
                 # Position légèrement aléatoire autour du haut du boss
@@ -700,6 +696,7 @@ class FinalBoss(Animal):
                         valid = True
 
                 self.projectiles.append([proj_rect, vx, vy])
+##################################################################
 
     def attack_phase_3(self, wolf):
         if not self.charging:
@@ -733,7 +730,7 @@ class FinalBoss(Animal):
         self.charging = False
         self.movement_locked = False
         self.charge_timer = self.charge_cooldown
-        self.speed = self.walk_speed  # ← on remet la vitesse normale ici
+        self.speed = self.walk_speed 
 
     def attack_phase_4(self, wolf):
         self.speed = 7
@@ -807,6 +804,7 @@ class BossFemme(Animal):
 
         self.projectiles = [p for p in self.projectiles if p.lifetime > 0]
 
+#CODE FAIT AVEC CHATGPT###################################
     def draw(self, screen, offset_x, offset_y):
         if self.shooting:
             phase = (self.shoot_anim_timer // 8) % 2  # alterne toutes les 8 frames
@@ -821,3 +819,5 @@ class BossFemme(Animal):
 
     def create_homing_projectile(self, wolf):
         return HomingProjectile(self.rect.center, wolf.rect.center)
+    
+##################################################
