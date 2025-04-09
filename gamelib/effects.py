@@ -1,4 +1,5 @@
 import pygame
+import math
 
 class BloodEffect:
     def __init__(self, pos):
@@ -68,3 +69,44 @@ class EggProjectile:
             screen.blit(frame, self.rect.move(-offset_x, -offset_y))
         elif not self.exploding:
             screen.blit(self.image, self.rect.move(-offset_x, -offset_y))
+
+class HomingProjectile:
+    def __init__(self, start_pos, target_pos):
+        self.original_image = pygame.image.load("data/claquette.png").convert_alpha()
+        self.image = self.original_image.copy()
+        self.angle = 0
+
+        self.rect = self.image.get_rect(center=start_pos)
+        self.speed = 8
+        self.target = target_pos
+        self.lifetime = 600
+        self.dir_x = 0
+        self.dir_y = 0
+
+    def update(self, target_rect):
+        # Réoriente légèrement vers la cible
+        dx = target_rect.centerx - self.rect.centerx
+        dy = target_rect.centery - self.rect.centery
+        dist = math.hypot(dx, dy)
+        if dist == 0:
+            return
+
+        dx /= dist
+        dy /= dist
+
+        smooth_factor = 0.05
+        self.dir_x += (dx - self.dir_x) * smooth_factor
+        self.dir_y += (dy - self.dir_y) * smooth_factor
+
+        self.rect.x += int(self.dir_x * self.speed)
+        self.rect.y += int(self.dir_y * self.speed)
+
+        self.angle = (self.angle + 15) % 360  # vitesse de rotation
+        self.lifetime -= 1
+
+    def draw(self, screen, offset_x, offset_y):
+        # Clignote dans les 3 dernières secondes (180 frames)
+        if self.lifetime > 180 or (self.lifetime // 10) % 2 == 0:
+            rotated = pygame.transform.rotate(self.original_image, self.angle)
+            new_rect = rotated.get_rect(center=self.rect.center)
+            screen.blit(rotated, new_rect.move(-offset_x, -offset_y))

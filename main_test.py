@@ -134,6 +134,20 @@ boss_jump_start_left = pygame.transform.flip(boss_jump_start, True, False)
 boss_jump_air_left = pygame.transform.flip(boss_jump_air, True, False)
 boss_attack_ground_left = pygame.transform.flip(boss_attack_ground, True, False)
 
+# Sprites de la femme
+femme_walk_images = [
+    pygame.image.load("data/femme_marche1.png").convert_alpha(),
+    pygame.image.load("data/femme_marche2.png").convert_alpha(),
+    pygame.image.load("data/femme_marche3.png").convert_alpha()
+]
+femme_walk_images_left = [pygame.transform.flip(img, True, False) for img in femme_walk_images]
+
+femme_throw_images = [
+    pygame.image.load("data/femme_lancer1.png").convert_alpha(),
+    pygame.image.load("data/femme_lancer2.png").convert_alpha()
+]
+femme_throw_images_left = [pygame.transform.flip(img, True, False) for img in femme_throw_images]
+
 #Boss poulet
 # Marche
 rooster_walk_right = [
@@ -166,7 +180,7 @@ liste_animals = [
     #animals.Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
     #animals.PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
     #animals.FinalBoss((500, 500),walk_right=boss_walk_images,walk_left=boss_walk_images_left,jump_start_right=boss_jump_start,jump_start_left=boss_jump_start_left,jump_air_right=boss_jump_air,jump_air_left=boss_jump_air_left,attack_ground_right=boss_attack_ground,attack_ground_left=boss_attack_ground_left)
-    #animals.BossFemme((1300, 700))
+    animals.BossFemme((1300, 500), femme_walk_images, femme_walk_images_left, femme_throw_images, femme_throw_images_left)
     ]
 heals = []
 speedboosts = []

@@ -1,7 +1,7 @@
 import pygame
 import random
 import math
-from gamelib.effects import EggProjectile
+from gamelib.effects import EggProjectile, HomingProjectile
 
 LEVEL_WIDTH = 1900
 
@@ -754,84 +754,61 @@ class FinalBoss(Animal):
                 self.current_phase4_action = None
                 self.attack_timer = self.attack_cooldown_4
 
-
 class BossFemme(Animal):
-    def __init__(self, pos):
-        surface = pygame.Surface((60, 60), pygame.SRCALPHA)
-        surface.fill((255, 105, 180))  # rose flashy
-        super().__init__(pos, [surface], [surface], speed=1, health=5)
+    def __init__(self, pos, walk_right, walk_left, throw_right, throw_left):
+        super().__init__(pos, walk_right, walk_left, speed=1, health=5)
+        self.speed = 4
+        self.walk_right = walk_right
+        self.walk_left = walk_left
+        self.throw_right = throw_right
+        self.throw_left = throw_left
+
         self.projectiles = []
-        self.shoot_cooldown = 500
-        self.shoot_timer = 0
-        self.explosions = [] 
+        self.shoot_cooldown = 300
+        self.shoot_timer = self.shoot_cooldown
+
+        self.shooting = False
+        self.shoot_anim_timer = 0
 
     def update(self, wolf, platforms=None):
         if not self.alive:
             self.projectiles.clear()
-            return  # Ne rien faire si le boss est mort
+            return
 
         super().update(platforms)
 
-        # Tir un projectile toutes les X frames
+        # === Gestion du tir ===
         if self.shoot_timer <= 0:
             proj = self.create_homing_projectile(wolf)
             self.projectiles.append(proj)
             self.shoot_timer = self.shoot_cooldown
+            self.shooting = True
+            self.shoot_anim_timer = 30
         else:
             self.shoot_timer -= 1
 
-        # Mise à jour des projectiles
+        if self.shooting:
+            self.shoot_anim_timer -= 1
+            if self.shoot_anim_timer <= 0:
+                self.shooting = False
+
+        # Projectiles
         for proj in self.projectiles:
             proj.update(wolf.rect)
 
-        # Supprimer les projectiles qui sont hors de l’écran
-        self.projectiles = [p for p in self.projectiles if 0 < p.lifetime and -200 < p.rect.y < 2000]
-
+        self.projectiles = [p for p in self.projectiles if p.lifetime > 0]
 
     def draw(self, screen, offset_x, offset_y):
-        super().draw(screen, offset_x, offset_y)
+        if self.shooting:
+            phase = (self.shoot_anim_timer // 8) % 2  # alterne toutes les 8 frames
+            image = self.throw_right[phase] if self.direction > 0 else self.throw_left[phase]
+        else:
+            image = self.image
+
+        screen.blit(image, self.rect.move(-offset_x, -offset_y))
+
         for proj in self.projectiles:
             proj.draw(screen, offset_x, offset_y)
 
     def create_homing_projectile(self, wolf):
         return HomingProjectile(self.rect.center, wolf.rect.center)
-
-class HomingProjectile:
-    def __init__(self, start_pos, target_pos):
-        self.rect = pygame.Rect(start_pos[0], start_pos[1], 10, 10)
-        self.color = (255, 0, 255)
-        self.speed = 4
-        self.target = target_pos
-        self.lifetime = 600 
-        self.dir_x = 0
-        self.dir_y = 0
-
-
-
-    def update(self, target_rect):
-        # Réoriente légèrement vers le loup
-        dx = target_rect.centerx - self.rect.centerx
-        dy = target_rect.centery - self.rect.centery
-        dist = math.hypot(dx, dy)
-        if dist == 0:
-            return
-
-        dx /= dist
-        dy /= dist
-
-        # Lissage de la direction (interpolation)
-        smooth_factor = 0.05  # plus petit = plus lent à suivre
-        self.dir_x += (dx - self.dir_x) * smooth_factor
-        self.dir_y += (dy - self.dir_y) * smooth_factor
-
-        self.rect.x += int(self.dir_x * self.speed)
-        self.rect.y += int(self.dir_y * self.speed)
-
-        self.lifetime -= 1
-
-
-    def draw(self, screen, offset_x, offset_y):
-    # Clignote quand il reste moins de 3 secondes
-        if self.lifetime > 180 or (self.lifetime // 10) % 2 == 0:
-            pygame.draw.rect(screen, self.color, self.rect.move(-offset_x, -offset_y))
-

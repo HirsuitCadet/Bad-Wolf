@@ -13,7 +13,6 @@ class Heal:
     def draw(self, screen, offset_x, offset_y):
         screen.blit(self.image, self.rect.move(-offset_x, -offset_y))
 
-
 class SpeedBoost:
     def __init__(self, pos):
         self.image = pygame.image.load("data/power_up_cri.png").convert_alpha()
