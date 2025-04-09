@@ -3,10 +3,8 @@ import random
 import math
 from gamelib.effects import EggProjectile, HomingProjectile
 
-LEVEL_WIDTH = 1900
-
 class Animal:
-    def __init__(self, pos, right_images, left_images, speed=2, health=1):
+    def __init__(self, pos, start_level, end_level, right_images, left_images, speed=2, health=1):
         self.right_images = right_images
         self.left_images = left_images
         self.images = self.right_images
@@ -22,7 +20,8 @@ class Animal:
         self.gravity = 1
         self.fall_speed = 0
         self.on_ground = False
-
+        self.start_level = start_level
+        self.end_level = end_level
 
     def update(self,platforms):
         if not self.alive:
@@ -41,7 +40,7 @@ class Animal:
                     self.fall_speed = 0
                     self.on_ground = True
 
-        if self.rect.left < 0 or self.rect.right > 1900:
+        if self.rect.left < 0 or self.rect.right > self.end_level:
             self.direction *= -1
 
         self.images = self.right_images if self.direction > 0 else self.left_images
@@ -73,31 +72,31 @@ class Animal:
             self.rect.height = 0
             return True
         return False
-    
+    # Méthode réalisée avec ChatGPT
+    #################################################
     def get_blood_position(self):
         visible_height = self.image.get_height()
         x = self.rect.left + self.image.get_width() // 2
         y = self.rect.top + visible_height - visible_height // 4
         return (x, y)
-
-
+    #################################################
 
 class Chicken(Animal):
-    def __init__(self, pos, right_images, left_images):
-        super().__init__(pos, right_images, left_images, speed=3, health=1)
+    def __init__(self, pos, start_level, end_level, right_images, left_images):
+        super().__init__(pos, start_level, end_level, right_images, left_images, speed=3, health=1)
 
 class Cow(Animal):
-    def __init__(self, pos, right_images, left_images):
-        super().__init__(pos, right_images, left_images, speed=1, health=3)
+    def __init__(self, pos, start_level, end_level, right_images, left_images):
+        super().__init__(pos, start_level, end_level, right_images, left_images, speed=1, health=3)
 
 class Pig(Animal):
-    def __init__(self, pos, right_images, left_images):
-        super().__init__(pos, right_images, left_images, speed=2, health=2)
+    def __init__(self, pos, start_level, end_level, right_images, left_images):
+        super().__init__(pos, start_level, end_level, right_images, left_images, speed=2, health=2)
 
 #CODE FAIT AVEC CHATGPT##########################
 class Charger(Animal):
-    def __init__(self, pos, walk_right, walk_left, charge_right, charge_left):
-        super().__init__(pos, walk_right, walk_left, speed=3, health=3)
+    def __init__(self, pos, start_level, end_level, walk_right, walk_left, charge_right, charge_left):
+        super().__init__(pos, start_level, end_level, walk_right, walk_left, speed=3, health=3)
         self.walk_right_images = walk_right
         self.walk_left_images = walk_left
         self.charge_right_images = charge_right
@@ -138,7 +137,7 @@ class Charger(Animal):
         
         self.rect.x += self.speed * self.direction
 
-        if self.rect.left < 0 or self.rect.right > 1900:
+        if self.rect.left < 0 or self.rect.right > self.end_level:
             self.direction *= -1
 
         if self.flash_timer > 0:
@@ -150,16 +149,15 @@ class Charger(Animal):
     ##############################################
 
     def take_damage(self, amount):
-        result = super().take_damage(amount)  # applique la logique de base (flash, invincibilité, mort)
-        if self.alive:  # S’il est encore en vie, on déclenche la fuite
+        result = super().take_damage(amount)  # applique la logique de Animal
+        if self.alive:
             self.flee_timer = 30
-            self.direction *= -1  # facultatif : il fuit dans l’autre sens
+            self.direction *= -1 
         return result
 
-
 class RoosterBoss(Animal):
-    def __init__(self, pos, right_images, left_images, charge_right, charge_left, shoot_right, shoot_left):
-        super().__init__(pos, right_images, left_images)
+    def __init__(self, pos, start_level, end_level, right_images, left_images, charge_right, charge_left, shoot_right, shoot_left):
+        super().__init__(pos, start_level, end_level, right_images, left_images)
         self.health = 3
         self.speed = 3
         self.normal_speed = 3
@@ -205,7 +203,7 @@ class RoosterBoss(Animal):
 
         # Collisions avec les plateformes (comme dans Animal)
         self.on_ground = False
-        if effects:  # on t'utilise déjà `effects` pour les bloods → c’est ta liste de plateformes
+        if effects:  # on t'utilise déjà `effects` pour les bloods
             for plat in effects:
                 if self.rect.colliderect(plat):
                     if self.fall_speed >= 0 and self.rect.bottom <= plat.bottom:
@@ -227,15 +225,17 @@ class RoosterBoss(Animal):
         else :
             self.speed = self.normal_speed
 
-        if self.rect.left < 0:
-            self.rect.left = 0
+        if self.rect.left < self.start_level:
+            self.rect.left = self.start_level
             self.direction = 1
-        elif self.rect.right > LEVEL_WIDTH:
-            self.rect.right = LEVEL_WIDTH
+        elif self.rect.right > self.end_level:
+            self.rect.right = self.end_level
             self.direction = -1
 
         self.images = self.right_images if self.direction > 0 else self.left_images
 
+        # Système de tirs d'oeufs réalisé avec ChatGPT (il avait du mal mais il m'a aidé à comprendre comment faire)
+        #################################################
         if not self.shooting:
             self.frame_timer += 1
             if self.frame_timer >= 6:
@@ -243,7 +243,7 @@ class RoosterBoss(Animal):
                 
                 self.frame_timer = 0
                 self.set_image(self.images[self.frame])
-
+        #################################################
 
         if self.flash_timer > 0:
             self.image = self.image.copy()
@@ -255,6 +255,8 @@ class RoosterBoss(Animal):
         if self.invincibility_timer > 0:
             self.invincibility_timer -= 1
 
+        # Toujours ce système de tir réalisé avec ChatGPT qui avait du mal
+        #################################################
         if self.shooting:
             self.shoot_timer -= 1
             if self.shoot_timer <= 0:
@@ -281,6 +283,7 @@ class RoosterBoss(Animal):
                 wolf.projectile_damage()
 
         self.projectiles = [egg for egg in self.projectiles if not egg.finished]
+        #################################################
 
     def draw(self, screen, offset_x, offset_y):
         if self.alive:
@@ -300,9 +303,8 @@ class RoosterBoss(Animal):
         self.image = new_image
         self.rect = self.image.get_rect(midbottom=old_midbottom)
         
-
 class Dog(Animal):
-    def __init__(self, pos, right_walk, left_walk, jump_prep, jump_prep_left, jump_air, jump_air_left):
+    def __init__(self, pos, start_level, end_level, right_walk, left_walk, jump_prep, jump_prep_left, jump_air, jump_air_left):
         self.attack_delay = 0
         self.attacking = False
         self.target_x = None
@@ -318,7 +320,7 @@ class Dog(Animal):
         self.jump_air = jump_air
         self.jump_air_left = jump_air_left
 
-        super().__init__(pos, right_walk, left_walk, speed=4, health=2)
+        super().__init__(pos, start_level, end_level, right_walk, left_walk, speed=4, health=2)
         self.rect = self.image.get_rect(topleft=pos)
         self.jump_timer = random.randint(60, 180)
 
@@ -363,15 +365,40 @@ class Dog(Animal):
 
                 self.attacking = False
                 self.speed = 0
-                self.fall_speed = self.vel_y  # initialise la chute
+                self.fall_speed = self.vel_y
+                self.jump_frames = 0  # nouvelle variable de sécurité
 
         # Appliquer mouvement si trajectoire active
         if self.target_x is not None and not self.attacking:
             self.rect.x += int(self.vel_x)
+            self.jump_frames += 1
 
-            if self.on_ground:
-                # Si proche de la cible → tout est OK
-                if abs(self.rect.centerx - self.target_x) < 10:
+            if self.jump_frames > 65:
+                self.vel_x = 0
+                self.fall_speed = 0
+                self.target_x = None
+                self.target_y = None
+                self.speed = 4
+
+            # Empêche de sortir du niveau
+            if self.rect.left < self.start_level:
+                self.rect.left = self.start_level
+                self.vel_x = 0
+                self.fall_speed = 0
+                self.target_x = None
+                self.target_y = None
+                self.speed = 4
+
+            elif self.rect.right > self.end_level:
+                self.rect.right = self.end_level
+                self.vel_x = 0
+                self.fall_speed = 0
+                self.target_x = None
+                self.target_y = None
+                self.speed = 4
+
+            if self.target_x is not None:
+                if abs(self.rect.centerx - self.target_x) < 10 and self.on_ground:
                     self.vel_x = 0
                     self.fall_speed = 0
                     self.target_x = None
@@ -380,8 +407,8 @@ class Dog(Animal):
 ##################################################
 
 class PigBoss(Animal):
-    def __init__(self, pos, walk_right, walk_left, charge_right, charge_left):
-        super().__init__(pos, walk_right, walk_left, speed=2, health=4)
+    def __init__(self, pos, start_level, end_level, walk_right, walk_left, charge_right, charge_left):
+        super().__init__(pos, start_level, end_level, walk_right, walk_left, speed=2, health=4)
         self.walk_right_images = walk_right
         self.walk_left_images = walk_left
         self.charge_right_images = charge_right
@@ -421,7 +448,7 @@ class PigBoss(Animal):
             self.speed = self.normal_speed
             self.is_charging = False
 
-        if self.rect.left < 0 or self.rect.right > 1900:
+        if self.rect.left < 0 or self.rect.right > self.end_level:
             self.direction *= -1
 
         # Choix des sprites
@@ -439,9 +466,10 @@ class PigBoss(Animal):
             self.image = self.images[self.frame]
             self.rect = self.image.get_rect(midbottom=(centerx, bottom)) 
             self.frame_timer = 0
+#################################################
 
         # Collision avec les bords
-        if self.rect.left < 0 or self.rect.right > LEVEL_WIDTH:
+        if self.rect.left < 0 or self.rect.right > self.end_level:
             self.direction *= -1
 
         # Flash rouge si touché
@@ -452,6 +480,7 @@ class PigBoss(Animal):
             self.image.blit(red_overlay, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
             self.flash_timer -= 1
 
+#CODE FAIT AVEC CHATGPT############################
     def crush_effect(self, wolf):
         wolf.take_damage(self)
         wolf.move_speed = 3
@@ -468,7 +497,21 @@ class PigBoss(Animal):
         self.direction *= -1
 
 class FinalBoss(Animal):
-    def __init__(self, pos, walk_right, walk_left, jump_start_right, jump_start_left, jump_air_right, jump_air_left, attack_ground_right, attack_ground_left):
+    def __init__(self, pos, start_level, end_level, walk_right, walk_left, jump_start_right, jump_start_left, jump_air_right, jump_air_left, attack_ground_right, attack_ground_left):
+        # 3 phases : rouge, orange, violet
+        self.phase = 1
+        surface1 = pygame.Surface((50, 50), pygame.SRCALPHA)
+        surface1.fill((255, 0, 0))  # Phase 1 : rouge
+        surface2 = pygame.Surface((50, 50), pygame.SRCALPHA)
+        surface2.fill((255, 165, 0))  # Phase 2 : orange
+        surface3 = pygame.Surface((50, 50), pygame.SRCALPHA)
+        surface3.fill((138, 43, 226))  # Phase 3 : violet
+
+        self.phase_images = {
+            1: [surface1],
+            2: [surface2],
+            3: [surface3]
+        }
 
         self.projectiles = []  # Liste de projectiles de phase 2 (rect, vx, vy)
 
@@ -481,8 +524,7 @@ class FinalBoss(Animal):
         self.attack_ground_right = attack_ground_right
         self.attack_ground_left = attack_ground_left
 
-        super().__init__(pos, walk_right, walk_left, speed=2, health=6)
-
+        super().__init__(pos, start_level, end_level, walk_right, walk_left, speed=2, health=6)
 
         self.direction = 1
         self.phase_changed = False
@@ -509,7 +551,6 @@ class FinalBoss(Animal):
         self.phase4_action_done = False
 
         self.shake_on_impact = False
-
 
     def update(self, wolf=None, platforms=None):
         if not self.alive:
@@ -542,11 +583,11 @@ class FinalBoss(Animal):
             self.rect.x += self.speed * self.direction
 
         # Empêche le boss de sortir du niveau
-        if self.rect.left < 0:
-            self.rect.left = 0
+        if self.rect.left < self.start_level:
+            self.rect.left = self.start_level
             self.direction = 1
-        elif self.rect.right > 1550:
-            self.rect.right = 1550
+        elif self.rect.right > self.end_level:
+            self.rect.right = self.end_level
             self.direction = -1
 
         # phase update
@@ -562,7 +603,6 @@ class FinalBoss(Animal):
             self.phase = 4
             self.right_images = self.left_images = self.phase_images[3]
             self.speed = 5 
-
 
         # Sélection dynamique du sprite
         if self.attack_zone_active and self.phase in [1, 2]:
@@ -585,8 +625,6 @@ class FinalBoss(Animal):
                 self.set_image(image)
                 self.frame_timer = 0
 
-
-
         if self.flash_timer > 0:
             self.image = self.image.copy()
             red_overlay = pygame.Surface(self.image.get_size(), flags=pygame.SRCALPHA)
@@ -597,7 +635,7 @@ class FinalBoss(Animal):
             self.direction_timer = 0
 
         self.direction_timer += 1
-        if self.direction_timer > 30:  # toutes les 30 frames (~0.5s), possibilité de changer de sens
+        if self.direction_timer > 30: 
             if random.random() < 0.02:  # 2% de chance de changer de sens
                 self.direction *= -1
             self.direction_timer = 0
@@ -611,6 +649,8 @@ class FinalBoss(Animal):
             self.attack_phase_2(wolf)
         else:
             self.attack_phase_1(wolf)
+        # Code réalisé avec ChatGPT
+        #################################################
         # Gestion visuelle de la zone d'attaque au sol
         if self.attack_zone_active:
             self.attack_zone_duration -= 1
@@ -618,8 +658,6 @@ class FinalBoss(Animal):
                 self.attack_zone_active = False
                 self.attack_zone_duration = 60
                 self.movement_locked = False
-
-#CODE FAIT AVEC CHATGPT##################################
 
         # Mise à jour des projectiles (rebondit vers le bas)
         for proj in self.projectiles:
@@ -632,7 +670,7 @@ class FinalBoss(Animal):
         # Supprime les projectiles trop bas
         self.projectiles = [p for p in self.projectiles if p[0].y < 2000]
 
-#######################################################################
+        #######################################################################
 
     def set_image(self, new_image):
         old_midbottom = self.rect.midbottom
@@ -717,8 +755,8 @@ class FinalBoss(Animal):
                 self.rect.left = 0
                 self.direction = 1
                 self._end_charge()
-            elif self.rect.right > LEVEL_WIDTH:
-                self.rect.right = LEVEL_WIDTH
+            elif self.rect.right > self.end_level:
+                self.rect.right = self.end_level
                 self.direction = -1
                 self._end_charge()
 
@@ -761,8 +799,8 @@ class FinalBoss(Animal):
                 self.attack_timer = self.attack_cooldown_4
 
 class BossFemme(Animal):
-    def __init__(self, pos, walk_right, walk_left, throw_right, throw_left):
-        super().__init__(pos, walk_right, walk_left, speed=1, health=5)
+    def __init__(self, pos, start_level, end_level, walk_right, walk_left, throw_right, throw_left):
+        super().__init__(pos, start_level, end_level, walk_right, walk_left, speed=1, health=5)
         self.speed = 4
         self.walk_right = walk_right
         self.walk_left = walk_left
@@ -783,7 +821,7 @@ class BossFemme(Animal):
 
         super().update(platforms)
 
-        # === Gestion du tir ===
+        # Gestion du tir (repris entre autre du boss poulet)
         if self.shoot_timer <= 0:
             proj = self.create_homing_projectile(wolf)
             self.projectiles.append(proj)

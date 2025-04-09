@@ -10,7 +10,8 @@ pygame.init()
 # Config 
 SCREEN_WIDTH = 1550
 SCREEN_HEIGHT = 800
-LEVEL_WIDTH = 1900
+LEVEL_START = 0
+LEVEL_WIDTH = 3100
 LEVEL_HEIGHT = 1000
 camera_offset = 0
 camera_y = LEVEL_HEIGHT - SCREEN_HEIGHT
@@ -25,6 +26,10 @@ clock = pygame.time.Clock()
 #Background
 background_image = pygame.image.load("data/fond_enclos.png").convert()
 background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+# L'explication de la mise en place des sprite a été faite par ChatGPT
+# Nous avons ensuite ajouté les sprites nous-même
+################################################
 
 # Wolf sprites
 left_images_wolf = [
@@ -160,22 +165,24 @@ rooster_charge_left = pygame.transform.flip(rooster_charge_right, True, False)
 rooster_shoot_right = pygame.image.load("data/boss_poulet_tire2.png").convert_alpha()
 rooster_shoot_left = pygame.transform.flip(rooster_shoot_right, True, False)
 
+#############################################
+
 # Entities
 wolf = Wolf((150, 700))
+# La liste de quelques animaux a été ajoutée ici
+# Les deux boss principaux ne sont pas ajouté pour conserver la surprise lors de la présentation
 liste_animals = [
-    #animals.Chicken((1000, 700), right_images_chicken, left_images_chicken),
-    animals.Chicken((1500, 700), right_images_chicken, left_images_chicken),
-    animals.Cow((1200, 700), right_images_cow, left_images_cow),
-    #animals.Cow((1700, 700), right_images_cow, left_images_cow),
-    #animals.Pig((1500, 700), right_images_pig, left_images_pig),
-    #animals.Pig((1900, 700), right_images_pig, left_images_pig),
-    #animals.Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
-    #animals.RoosterBoss((1000, 700),right_images=rooster_walk_right,left_images=rooster_walk_left,charge_right=rooster_charge_right,charge_left=rooster_charge_left,shoot_right=rooster_shoot_right,shoot_left=rooster_shoot_left),
-    animals.Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
-    #animals.PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
-    #animals.FinalBoss((500, 500),walk_right=boss_walk_images,walk_left=boss_walk_images_left,jump_start_right=boss_jump_start,jump_start_left=boss_jump_start_left,jump_air_right=boss_jump_air,jump_air_left=boss_jump_air_left,attack_ground_right=boss_attack_ground,attack_ground_left=boss_attack_ground_left)
-    #animals.BossFemme((1300, 500), femme_walk_images, femme_walk_images_left, femme_throw_images, femme_throw_images_left)
-    ]
+    animals.Chicken((1000, 700), LEVEL_START, LEVEL_WIDTH, right_images_chicken, left_images_chicken),
+    animals.Chicken((1500, 700), LEVEL_START, LEVEL_WIDTH, right_images_chicken, left_images_chicken),
+    animals.Cow((1200, 700), LEVEL_START, LEVEL_WIDTH, right_images_cow, left_images_cow),
+    animals.Cow((1700, 700), LEVEL_START, LEVEL_WIDTH, right_images_cow, left_images_cow),
+    animals.Pig((1500, 700), LEVEL_START, LEVEL_WIDTH, right_images_pig, left_images_pig),
+    animals.Pig((1900, 700), LEVEL_START, LEVEL_WIDTH, right_images_pig, left_images_pig),
+    animals.Charger((1600, 700), LEVEL_START, LEVEL_WIDTH, right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
+    animals.RoosterBoss((1000, 700), LEVEL_START, LEVEL_WIDTH, right_images=rooster_walk_right,left_images=rooster_walk_left,charge_right=rooster_charge_right,charge_left=rooster_charge_left,shoot_right=rooster_shoot_right,shoot_left=rooster_shoot_left),
+    animals.Dog((800, 700), LEVEL_START, LEVEL_WIDTH, right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
+    animals.PigBoss((1700, 700), LEVEL_START, LEVEL_WIDTH, right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
+]
 heals = []
 speedboosts = []
 speedboost_timer = 0
@@ -184,23 +191,27 @@ egg_explosions = []
 frame_counter = 0
 
 # Plateformes
+# Cette liste éphémère a été réalisée par ChatGPT
+#################################################
 platforms = [
     pygame.Rect(0, 800, 3100, 50),
-    #pygame.Rect(200, 700, 120, 20),
-    #pygame.Rect(400, 600, 100, 20),
-    #pygame.Rect(600, 500, 100, 20),
-    #pygame.Rect(850, 700, 150, 20),
-    #pygame.Rect(1050, 600, 100, 20),
-    #pygame.Rect(1250, 500, 120, 20),
-    #pygame.Rect(1450, 400, 120, 20),
-    #pygame.Rect(1650, 650, 100, 20),
-    #pygame.Rect(1750, 550, 100, 20),
-    #pygame.Rect(1800, 450, 80, 20)
+    pygame.Rect(200, 700, 120, 20),
+    pygame.Rect(400, 600, 100, 20),
+    pygame.Rect(600, 500, 100, 20),
+    pygame.Rect(850, 700, 150, 20),
+    pygame.Rect(1050, 600, 100, 20),
+    pygame.Rect(1250, 500, 120, 20),
+    pygame.Rect(1450, 400, 120, 20),
+    pygame.Rect(1650, 650, 100, 20),
+    pygame.Rect(1750, 550, 100, 20),
+    pygame.Rect(1800, 450, 80, 20)
 ]
 
 moving_platforms = [
     MovingPlatform(400, 600, 120, 20, dx=2, range_x=200) 
 ]
+
+#################################################
 
 # HUD
 
@@ -209,8 +220,9 @@ heart_empty = pygame.image.load("data/health_vide.png").convert_alpha()
 
 running = True
 
-pygame.mixer.music.load("data/Son_intro.wav")
-pygame.mixer.music.play(-1)  # -1 pour boucle infinie
+# Gestion du son (on faisait un test, il est commenté pour vos oreilles monsieur croyez-nous)
+#pygame.mixer.music.load("data/Son_intro.wav")
+#pygame.mixer.music.play(-1)  # -1 pour boucle infinie
 
 
 # === ÉCRAN DE DÉMARRAGE ===
@@ -227,11 +239,10 @@ while waiting:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 waiting = False
-                pygame.mixer.music.stop()
+                #pygame.mixer.music.stop()
 
     pygame.display.flip()
     clock.tick(60)
-
 
 while running:
 
@@ -262,7 +273,6 @@ while running:
 
     for plat in moving_platforms:
         plat.update()
-
 
     # Collisions plateformes
     wolf.jumping = True
@@ -339,7 +349,8 @@ while running:
                     camera_shake = 50
                     wolf.jump_speed = -20
                     wolf.jumping = True
-
+        # Code produit avec ChatGPT 
+        #################################################
         # === DROP UNIQUE À LA MORT ===
         if not animal.alive and animal.was_alive:
             animal.was_alive = False  # on évite les répétitions
@@ -348,7 +359,8 @@ while running:
                 speedboosts.append(SpeedBoost(animal.rect.center))
             else:
                 if random.randint(1, 100) <= 20:
-                    heals.append(Heal(animal.rect.center))
+                    heals.append(Heal(animal.rect.center))        
+        #################################################
 
     # Affichage des heals
     for heal in heals[:]:
@@ -387,10 +399,10 @@ while running:
             wolf.jump = lambda: setattr(wolf, 'jump_speed', -13) or setattr(wolf, 'jumping', True)
 
     # Affichage des effets
-    explosion_frame_duration = 25  # plus la valeur est grande, plus l'explosion est lente
+    explosion_frame_duration = 25
 
     for blood in bloods[:]:
-        if isinstance(blood, tuple):  # Animation d'explosion d'œuf
+        if isinstance(blood, tuple):
             img, pos, delay = blood
             if frame_counter >= delay * explosion_frame_duration:
                 screen.blit(img, (pos[0] - camera_offset, pos[1] - camera_y))
@@ -401,6 +413,8 @@ while running:
             if blood.finished:
                 bloods.remove(blood)
 
+    # Les deux scrolls ont été réalisé avec ChatGPT
+    #################################################
     # Scroll horizontal
     if wolf.rect.right > camera_offset + SCREEN_WIDTH:
         if camera_offset + SCREEN_WIDTH < LEVEL_WIDTH:
@@ -416,6 +430,7 @@ while running:
         camera_y = max(0, wolf.rect.top - CAMERA_MARGIN_Y)
     elif wolf.rect.bottom > camera_y + SCREEN_HEIGHT - CAMERA_MARGIN_Y:
         camera_y = min(LEVEL_HEIGHT - SCREEN_HEIGHT, wolf.rect.bottom - SCREEN_HEIGHT + CAMERA_MARGIN_Y)
+    #################################################
 
     # DESSIN
     for plat in platforms:
@@ -430,7 +445,7 @@ while running:
 
     wolf.update()
 
-#CODE FAIT AVEC CHATGPT#################### 
+    #CODE FAIT AVEC CHATGPT#################### 
     # Gestion du ralentissement temporaire par le boss cochon
     if hasattr(wolf, 'slowed_timer') and wolf.slowed_timer > 0:
         wolf.slowed_timer -= 1
@@ -459,6 +474,8 @@ while running:
 
     frame_counter += 1
 
+    # Code fait avec ChatGPT
+    #################################################
     # Affichage des effets d'explosion d'œufs
     for explosion in egg_explosions[:]:
         explosion.update()
@@ -466,13 +483,15 @@ while running:
         if explosion.finished:
             egg_explosions.remove(explosion)
 
+    #################################################
+
     if wolf.hp <= 0:
         game_over = True
         running = False
 
     pygame.display.flip()
     clock.tick(60)
-# === ÉCRAN DE GAME OVER ===
+# ÉCRAN DE GAME OVER
 if game_over:
     title_font = pygame.font.Font(None, 80)
     info_font = pygame.font.Font(None, 40)
