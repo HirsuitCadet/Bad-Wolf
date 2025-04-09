@@ -2,7 +2,7 @@ import pygame
 import random
 import gamelib.animals as animals
 from gamelib.sprites import Wolf
-from gamelib.items import Heal, SpeedBoost
+from gamelib.items import Heal, SpeedBoost, MovingPlatform
 from gamelib.effects import BloodEffect
 
 pygame.init()
@@ -198,6 +198,10 @@ platforms = [
     #pygame.Rect(1800, 450, 80, 20)
 ]
 
+moving_platforms = [
+    MovingPlatform(400, 600, 120, 20, dx=2, range_x=200) 
+]
+
 # HUD
 
 heart_image = pygame.image.load("data/heal.png").convert_alpha()
@@ -251,9 +255,13 @@ while running:
     previous_bottom = wolf.rect.bottom
     wolf.move(0, wolf.jump_speed)
 
+    for plat in moving_platforms:
+        plat.update()
+
+
     # Collisions plateformes
     wolf.jumping = True
-    for platform in platforms:
+    for platform in platforms + [p.rect for p in moving_platforms]:
         if wolf.rect.colliderect(platform):
             if wolf.jump_speed > 0 and previous_bottom <= platform.top:
                 wolf.rect.bottom = platform.top
@@ -408,6 +416,10 @@ while running:
     # DESSIN
     for plat in platforms:
         pygame.draw.rect(screen, (100, 100, 100), plat.move(-camera_offset, -camera_y))
+
+    for plat in moving_platforms:
+        plat.draw(screen, camera_offset, camera_y)
+
 
     for animal in liste_animals:
         animal.draw(screen, camera_offset, camera_y)

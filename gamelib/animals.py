@@ -367,12 +367,15 @@ class Dog(Animal):
         if self.target_x is not None and not self.attacking:
             self.rect.x += int(self.vel_x)
 
-            if abs(self.rect.centerx - self.target_x) < 10 and self.on_ground:
-                self.vel_x = 0
-                self.fall_speed = 0
-                self.target_x = None
-                self.target_y = None
-                self.speed = 4
+            if self.on_ground:
+                # Si proche de la cible → tout est OK
+                if abs(self.rect.centerx - self.target_x) < 10:
+                    self.vel_x = 0
+                    self.fall_speed = 0
+                    self.target_x = None
+                    self.target_y = None
+                    self.speed = 4
+
 
 class PigBoss(Animal):
     def __init__(self, pos, walk_right, walk_left, charge_right, charge_left):
