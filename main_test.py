@@ -209,6 +209,10 @@ heart_empty = pygame.image.load("data/health_vide.png").convert_alpha()
 
 running = True
 
+pygame.mixer.music.load("data/Son_intro.wav")
+pygame.mixer.music.play(-1)  # -1 pour boucle infinie
+
+
 # === ÉCRAN DE DÉMARRAGE ===
 waiting = True
 while waiting:
@@ -223,6 +227,7 @@ while waiting:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 waiting = False
+                pygame.mixer.music.stop()
 
     pygame.display.flip()
     clock.tick(60)
