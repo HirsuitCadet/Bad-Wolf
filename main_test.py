@@ -62,11 +62,6 @@ right_images_chicken = [
 ]
 left_images_chicken = [pygame.transform.flip(img, True, False) for img in right_images_chicken]
 
-# Rooster boss
-rooster_boss = animals.RoosterBoss((1000, 700), [pygame.Surface((80, 80))], [pygame.Surface((80, 80))])
-rooster_boss.right_images[0].fill((255, 255, 255))
-rooster_boss.left_images[0].fill((255, 255, 255))
-
 #Cow sprites
 right_images_cow = [
     pygame.image.load("data/Vache1.png").convert_alpha(),
@@ -127,18 +122,18 @@ dog_jump_air_left = pygame.transform.flip(dog_jump_air, True, False)
 # Entities
 wolf = Wolf((150, 700))
 liste_animals = [
-    #animals.Chicken((1000, 700), right_images_chicken, left_images_chicken),
-    #animals.Chicken((1500, 700), right_images_chicken, left_images_chicken),
-    #animals.Cow((1200, 700), right_images_cow, left_images_cow),
-    #animals.Cow((1700, 700), right_images_cow, left_images_cow),
-    #animals.Pig((1500, 700), right_images_pig, left_images_pig),
-    #animals.Pig((1900, 700), right_images_pig, left_images_pig),
-    #animals.Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
-    #animals.Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
-    #animals.PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
-    #animals.FinalBoss((500,700))
+    ##animals.Chicken((1000, 700), right_images_chicken, left_images_chicken),
+    ##animals.Chicken((1500, 700), right_images_chicken, left_images_chicken),
+    ##animals.Cow((1200, 700), right_images_cow, left_images_cow),
+    ##animals.Cow((1700, 700), right_images_cow, left_images_cow),
+    ##animals.Pig((1500, 700), right_images_pig, left_images_pig),
+    ##animals.Pig((1900, 700), right_images_pig, left_images_pig),
+    ##animals.Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
+    #animals.RoosterBoss((1000, 700), [pygame.Surface((80, 80))], [pygame.Surface((80, 80))]),
+    ##animals.Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
+    #animals.PigBoss((800, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
+    ##animals.FinalBoss((500,700))
     animals.BossFemme((1300, 700))]
-liste_animals.append(rooster_boss)
 heals = []
 speedboosts = []
 speedboost_timer = 0
@@ -167,11 +162,8 @@ heart_image = pygame.Surface((30, 30))
 heart_image.fill((255, 0, 0))
 
 running = True
+
 # === ÉCRAN DE DÉMARRAGE ===
-title_font = pygame.font.Font(None, 80)
-info_font = pygame.font.Font(None, 40)
-
-
 waiting = True
 while waiting:
     start_img = pygame.image.load("data/start_screen.png").convert()
@@ -444,8 +436,6 @@ while running:
         camera_shake -= 1
 
     screen.blit(wolf.image, wolf.rect.move(-camera_offset, -camera_y))
-    rooster_boss.update(wolf.rect, wolf, egg_explosions, frame_counter)
-    rooster_boss.draw(screen, camera_offset, camera_y)
 
     for i in range(wolf.hp):
         screen.blit(heart_image, (10 + i * 35, 10))

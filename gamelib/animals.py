@@ -102,12 +102,9 @@ class Charger(Animal):
         self.charge_right_images = charge_right
         self.charge_left_images = charge_left
         self.is_charging = False
-        #self.flee_timer = 0
+        self.flee_timer = 0
         self.normal_speed = self.speed
-        #self.flee_speed = 10
-
-
-
+        self.flee_speed = 10
 
     def update(self, wolf=None):
         if not self.alive:
@@ -117,12 +114,14 @@ class Charger(Animal):
         dx = wolf.rect.centerx - self.rect.centerx
         dy = wolf.rect.centery - self.rect.centery
 
-        # Si le loup est devant lui et à portée → charge
-        if abs(dx) < 500 and abs(dy) < 100 and ((dx > 0 and self.direction > 0) or (dx < 0 and self.direction < 0)):
+        if self.flee_timer > 0:
+            self.speed = self.flee_speed
+            self.flee_timer -= 1
+        elif abs(dx) < 500 and abs(dy) < 100 and ((dx > 0 and self.direction > 0) or (dx < 0 and self.direction < 0)):
             self.speed = 7
             self.is_charging = True
         else:
-            self.speed = 3
+            self.speed = self.normal_speed
             self.is_charging = False
         
         if self.is_charging:
@@ -135,19 +134,11 @@ class Charger(Animal):
             self.frame = (self.frame + 1) % len(self.images)
             self.image = self.images[self.frame]
             self.frame_timer = 0
-
-
-        #if self.flee_timer > 0:
-        #    self.flee_timer -= 1
-        #    if self.flee_timer == 0:
-        #        self.speed = self.normal_speed
-
+        
         self.rect.x += self.speed * self.direction
-
 
         if self.rect.left < 0 or self.rect.right > 1900:
             self.direction *= -1
-
 
         if self.flash_timer > 0:
             self.image = self.image.copy()
@@ -155,18 +146,21 @@ class Charger(Animal):
             red_overlay.fill((255, 0, 0, 100))
             self.image.blit(red_overlay, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
             self.flash_timer -= 1
-            
-    #def knockback(self):
-        #self.flee_timer = 10
-        #self.direction *= -1
-        #elf.speed = self.flee_speed
+
+    def take_damage(self, amount):
+        result = super().take_damage(amount)  # applique la logique de base (flash, invincibilité, mort)
+        if self.alive:  # S’il est encore en vie, on déclenche la fuite
+            self.flee_timer = 30
+            self.direction *= -1  # facultatif : il fuit dans l’autre sens
+        return result
+
 
 class RoosterBoss(Animal):
     def __init__(self, pos, right_images, left_images):
         super().__init__(pos, right_images, left_images)
         self.health = 3
-        self.speed = 2.5
-        self.normal_speed = 2.5
+        self.speed = 3
+        self.normal_speed = 3
         self.flee_speed = 10
         self.flee_timer = 0
         self.projectiles = []
@@ -201,13 +195,18 @@ class RoosterBoss(Animal):
             self.projectiles = [e for e in self.projectiles if not e.finished]
             return
 
-        self.speed = self.flee_speed if self.flee_timer > 0 else self.normal_speed
+        if self.flash_timer > 0:
+            self.flee_timer = 30
+
         self.rect.x += self.speed * self.direction
 
         if self.flee_timer > 0:
+            self.speed = self.flee_speed
             self.flee_timer -= 1
         elif random.random() < 0.01:
             self.direction *= -1
+        else :
+            self.speed = self.normal_speed
 
         if self.rect.left < 0:
             self.rect.left = 0
@@ -352,24 +351,41 @@ class PigBoss(Animal):
         self.charge_left_images = charge_left
         self.is_charging = False
         self.custom_animation = True
+        self.flee_timer = 0
+        self.normal_speed = 2
+        self.charge_speed = 7
+        self.flee_speed = 10
+
+    def take_damage(self, amount):
+        result = super().take_damage(amount)
+        if self.alive:
+            self.flee_timer = 30  # 0.5s de fuite
+            self.direction *= -1
+        return result
 
     def update(self, wolf, platforms):
         if not self.alive:
             return
 
-        # Appliquer la gravité et les collisions avec le sol
+        # Appliquer la gravité et collisions
         super().update(platforms)
 
         dx = wolf.rect.centerx - self.rect.centerx
         dy = wolf.rect.centery - self.rect.centery
 
-        # Détection pour enclencher la charge
-        if abs(dx) < 500 and abs(dy) < 100 and ((dx > 0 and self.direction > 0) or (dx < 0 and self.direction < 0)):
-            self.speed = 4
+        if self.flee_timer > 0:
+            self.speed = self.flee_speed
+            self.flee_timer -= 1
+            self.is_charging = False
+        elif abs(dx) < 500 and abs(dy) < 100 and ((dx > 0 and self.direction > 0) or (dx < 0 and self.direction < 0)):
+            self.speed = self.charge_speed
             self.is_charging = True
         else:
-            self.speed = 2
+            self.speed = self.normal_speed
             self.is_charging = False
+
+        if self.rect.left < 0 or self.rect.right > 1900:
+            self.direction *= -1
 
         # Choix des sprites
         if self.is_charging:
@@ -385,14 +401,6 @@ class PigBoss(Animal):
             self.image = self.images[self.frame]
             self.rect = self.image.get_rect(midbottom=(centerx, bottom)) 
             self.frame_timer = 0
-
-        # Déplacement horizontal
-        #if self.flee_timer > 0:
-        #    self.rect.x += 6 * self.direction  # vitesse de fuite
-        #    self.flee_timer -= 1
-        #else:
-         #   self.rect.x += self.speed * self.direction
-
 
         # Collision avec les bords
         if self.rect.left < 0 or self.rect.right > LEVEL_WIDTH:
