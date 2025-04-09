@@ -134,6 +134,10 @@ boss_jump_start_left = pygame.transform.flip(boss_jump_start, True, False)
 boss_jump_air_left = pygame.transform.flip(boss_jump_air, True, False)
 boss_attack_ground_left = pygame.transform.flip(boss_attack_ground, True, False)
 
+#attaque de zone
+zone_attack_img = pygame.image.load("data/attaque_de_zone.png").convert_alpha()
+zone_attack_img = pygame.transform.scale(zone_attack_img, (600, 20))
+
 # Sprites de la femme
 femme_walk_images = [
     pygame.image.load("data/femme_marche1.png").convert_alpha(),
@@ -177,10 +181,10 @@ liste_animals = [
     #animals.Pig((1500, 700), right_images_pig, left_images_pig),
     #animals.Pig((1900, 700), right_images_pig, left_images_pig),
     #animals.Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
-    animals.RoosterBoss((1000, 700),right_images=rooster_walk_right,left_images=rooster_walk_left,charge_right=rooster_charge_right,charge_left=rooster_charge_left,shoot_right=rooster_shoot_right,shoot_left=rooster_shoot_left),
+    #animals.RoosterBoss((1000, 700),right_images=rooster_walk_right,left_images=rooster_walk_left,charge_right=rooster_charge_right,charge_left=rooster_charge_left,shoot_right=rooster_shoot_right,shoot_left=rooster_shoot_left),
     #animals.Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
     #animals.PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
-    #animals.FinalBoss((500, 500),walk_right=boss_walk_images,walk_left=boss_walk_images_left,jump_start_right=boss_jump_start,jump_start_left=boss_jump_start_left,jump_air_right=boss_jump_air,jump_air_left=boss_jump_air_left,attack_ground_right=boss_attack_ground,attack_ground_left=boss_attack_ground_left)
+    animals.FinalBoss((500, 500),walk_right=boss_walk_images,walk_left=boss_walk_images_left,jump_start_right=boss_jump_start,jump_start_left=boss_jump_start_left,jump_air_right=boss_jump_air,jump_air_left=boss_jump_air_left,attack_ground_right=boss_attack_ground,attack_ground_left=boss_attack_ground_left),
     animals.BossFemme((1300, 500), femme_walk_images, femme_walk_images_left, femme_throw_images, femme_throw_images_left)
     ]
 heals = []
@@ -284,12 +288,17 @@ while running:
                 if wolf.rect.colliderect(proj.rect) and wolf.hit_timer <= 0:
                     wolf.take_damage(animal)
                     to_remove.append(proj)
-
             # Supprime les projectiles qui ont touché le loup
             for proj in to_remove:
                 animal.projectiles.remove(proj)
+
         elif isinstance(animal, animals.FinalBoss):
             animal.update(wolf, platforms)
+            # Si le boss vient d’atterrir pour son attaque de zone (phase 1), on déclenche le tremblement
+            if animal.shake_on_impact:
+                camera_shake =40 # nombre de frames de secousse
+                animal.shake_on_impact = False
+
             if animal.charging and wolf.rect.colliderect(animal.rect) and wolf.hit_timer <= 0:
                 wolf.take_damage(animal)
                 camera_shake = 30
@@ -314,9 +323,15 @@ while running:
                         wolf.take_damage(animal)
             # Zone d’impact (attaque au sol)
             if animal.attack_zone_active:
-                zone_rect = pygame.Rect(animal.rect.centerx - 300, animal.rect.bottom - 20, 600, 20)
-                pygame.draw.rect(screen, (255, 0, 0), zone_rect.move(-camera_offset, -camera_y))
+                # Position de la zone au sol
+                zone_x = animal.rect.centerx - 300
+                zone_y = animal.rect.bottom - 20
+                zone_rect = pygame.Rect(zone_x, zone_y, 600, 20)
 
+                # Affichage de l'image
+                screen.blit(zone_attack_img, (zone_x - camera_offset, zone_y - camera_y))
+
+                # Collision avec le loup
                 if (
                     zone_rect.colliderect(wolf.rect)
                     and not loup_above
