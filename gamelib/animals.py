@@ -513,6 +513,9 @@ class FinalBoss(Animal):
         self.current_phase4_action = None
         self.phase4_action_done = False
 
+        self.shake_on_impact = False
+
+
     def update(self, wolf=None, platforms=None):
         if not self.alive:
             return
@@ -655,6 +658,7 @@ class FinalBoss(Animal):
                 self.attacking = False
                 self.attack_timer = self.attack_cooldown
                 self.has_jumped = False
+                self.shake_on_impact = True
 
     def attack_phase_2(self, wolf):
         if not self.attacking:
