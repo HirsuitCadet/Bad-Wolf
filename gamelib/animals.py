@@ -429,7 +429,7 @@ class PigBoss(Animal):
         self.direction *= -1
 
 class FinalBoss(Animal):
-    def __init__(self, pos):
+    def __init__(self, pos, walk_right, walk_left, jump_start_right, jump_start_left, jump_air_right, jump_air_left, attack_ground_right, attack_ground_left):
         # 3 phases : rouge, orange, violet
         self.phase = 1
         surface1 = pygame.Surface((50, 50), pygame.SRCALPHA)
@@ -447,7 +447,18 @@ class FinalBoss(Animal):
 
         self.projectiles = []  # Liste de projectiles de phase 2 (rect, vx, vy)
 
-        super().__init__(pos, self.phase_images[1], self.phase_images[1], speed=2, health=6)
+        self.walk_right = walk_right
+        self.walk_left = walk_left
+        self.jump_start_right = jump_start_right
+        self.jump_start_left = jump_start_left
+        self.jump_air_right = jump_air_right
+        self.jump_air_left = jump_air_left
+        self.attack_ground_right = attack_ground_right
+        self.attack_ground_left = attack_ground_left
+
+        super().__init__(pos, walk_right, walk_left, speed=2, health=6)
+
+
         self.direction = 1
         self.phase_changed = False
 
@@ -524,13 +535,28 @@ class FinalBoss(Animal):
             self.speed = 5  # optionnel : vitesse plus élevée
 
 
-        self.images = self.right_images if self.direction > 0 else self.left_images
+        # Sélection dynamique du sprite
+        if self.attack_zone_active and self.phase in [1, 2]:
+            image = self.attack_ground_right if self.direction > 0 else self.attack_ground_left
+            self.set_image(image)
 
-        self.frame_timer += 1
-        if self.frame_timer >= 10:
-            self.frame = (self.frame + 1) % len(self.images)
-            self.image = self.images[self.frame]
-            self.frame_timer = 0
+        elif not self.on_ground and self.has_jumped:
+            image = self.jump_air_right if self.direction > 0 else self.jump_air_left
+            self.set_image(image)
+
+        elif self.attacking and self.has_jumped:
+            image = self.jump_start_right if self.direction > 0 else self.jump_start_left
+            self.set_image(image)
+
+        else:
+            self.frame_timer += 1
+            if self.frame_timer >= 10:
+                self.frame = (self.frame + 1) % len(self.walk_right)
+                image = self.walk_right[self.frame] if self.direction > 0 else self.walk_left[self.frame]
+                self.set_image(image)
+                self.frame_timer = 0
+
+
 
         if self.flash_timer > 0:
             self.image = self.image.copy()
@@ -575,6 +601,10 @@ class FinalBoss(Animal):
         # Supprime les projectiles trop bas
         self.projectiles = [p for p in self.projectiles if p[0].y < 2000]
 
+    def set_image(self, new_image):
+        old_midbottom = self.rect.midbottom
+        self.image = new_image
+        self.rect = self.image.get_rect(midbottom=old_midbottom)
 
     def attack_phase_1(self, wolf):
         if not self.attacking:
