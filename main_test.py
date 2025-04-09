@@ -138,7 +138,8 @@ boss_attack_ground_left = pygame.transform.flip(boss_attack_ground, True, False)
 femme_walk_images = [
     pygame.image.load("data/femme_marche1.png").convert_alpha(),
     pygame.image.load("data/femme_marche2.png").convert_alpha(),
-    pygame.image.load("data/femme_marche3.png").convert_alpha()
+    pygame.image.load("data/femme_marche3.png").convert_alpha(),
+    pygame.image.load("data/femme_marche4.png").convert_alpha()
 ]
 femme_walk_images_left = [pygame.transform.flip(img, True, False) for img in femme_walk_images]
 
