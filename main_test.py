@@ -182,10 +182,10 @@ liste_animals = [
     #animals.Pig((1900, 700), right_images_pig, left_images_pig),
     #animals.Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
     #animals.RoosterBoss((1000, 700),right_images=rooster_walk_right,left_images=rooster_walk_left,charge_right=rooster_charge_right,charge_left=rooster_charge_left,shoot_right=rooster_shoot_right,shoot_left=rooster_shoot_left),
-    #animals.Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
+    animals.Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
     #animals.PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
-    animals.FinalBoss((500, 500),walk_right=boss_walk_images,walk_left=boss_walk_images_left,jump_start_right=boss_jump_start,jump_start_left=boss_jump_start_left,jump_air_right=boss_jump_air,jump_air_left=boss_jump_air_left,attack_ground_right=boss_attack_ground,attack_ground_left=boss_attack_ground_left),
-    animals.BossFemme((1300, 500), femme_walk_images, femme_walk_images_left, femme_throw_images, femme_throw_images_left)
+    #animals.FinalBoss((500, 500),walk_right=boss_walk_images,walk_left=boss_walk_images_left,jump_start_right=boss_jump_start,jump_start_left=boss_jump_start_left,jump_air_right=boss_jump_air,jump_air_left=boss_jump_air_left,attack_ground_right=boss_attack_ground,attack_ground_left=boss_attack_ground_left),
+    #animals.BossFemme((1300, 500), femme_walk_images, femme_walk_images_left, femme_throw_images, femme_throw_images_left)
     ]
 heals = []
 speedboosts = []
