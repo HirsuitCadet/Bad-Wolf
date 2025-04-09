@@ -8,6 +8,8 @@ class Wolf(pygame.sprite.Sprite):
         self.images = self.right_images
         self.image = self.images[0]
         self.rect = self.image.get_rect(topleft=pos)
+        self.level_width = 3100
+        self.at_edge = False
 
         self.jump_speed = 0
         self.jump_accel = 0.6
@@ -37,7 +39,25 @@ class Wolf(pygame.sprite.Sprite):
         self.squished_sit_image_left = pygame.transform.scale(self.sit_image_left, (self.sit_image_left.get_width(), int(self.sit_image_left.get_height() * 0.6)))
 
     def move(self, dx, dy):
-        self.rect.x += dx
+        self.at_edge = False  # reset à chaque déplacement
+
+        # Gérer dx (horizontal)
+        if self.rect.x + dx <= 0:
+            self.rect.x = 0
+            self.at_edge = True
+            if self.jumping:
+                self.rect.x += 2  # petit recul vers la droite
+                self.jumping = False
+        elif self.rect.x + dx >= self.level_width - 75:
+            self.rect.x = self.level_width - 75
+            self.at_edge = True
+            if self.jumping:
+                self.rect.x -= 2  # petit recul vers la gauche
+                self.jumping = False
+        else:
+            self.rect.x += dx
+
+        # Toujours appliquer dy
         self.rect.y += dy
 
     def jump(self):
@@ -77,8 +97,9 @@ class Wolf(pygame.sprite.Sprite):
 
         self.images = self.right_images if self.direction > 0 else self.left_images
 
-        if self.jumping:
-    # Sprite fixe de saut : index 4
+        if self.at_edge:
+            base_image = self.sit_image_right if self.direction > 0 else self.sit_image_left
+        elif self.jumping:
             base_image = self.right_images[4] if self.direction > 0 else self.left_images[4]
         elif abs(self.rect.x - self._last_x) > 0:
             self.frame_timer += 1

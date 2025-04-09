@@ -186,7 +186,7 @@ frame_counter = 0
 
 # Plateformes
 platforms = [
-    pygame.Rect(0, 800, 1900, 50),
+    pygame.Rect(0, 800, 3100, 50),
     #pygame.Rect(200, 700, 120, 20),
     #pygame.Rect(400, 600, 100, 20),
     #pygame.Rect(600, 500, 100, 20),
