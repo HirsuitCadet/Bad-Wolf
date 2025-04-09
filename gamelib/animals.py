@@ -264,7 +264,7 @@ class RoosterBoss(Animal):
             if self.shoot_interval <= 0:
                 if wolf_rect and abs(self.rect.centerx - wolf_rect.centerx) < 400:
                     dir_x = 1 if wolf_rect.centerx > self.rect.centerx else -1
-                    dir_y = random.choice([0, -1])
+                    dir_y = random.choice([-1, -2])
                     self.shoot_direction = (dir_x, dir_y)
                     self.shooting = True
                     self.shoot_timer = self.pre_attack_duration
