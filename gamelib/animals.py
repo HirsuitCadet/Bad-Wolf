@@ -156,7 +156,7 @@ class Charger(Animal):
 
 
 class RoosterBoss(Animal):
-    def __init__(self, pos, right_images, left_images):
+    def __init__(self, pos, right_images, left_images, charge_right, charge_left, shoot_right, shoot_left):
         super().__init__(pos, right_images, left_images)
         self.health = 3
         self.speed = 3
@@ -168,8 +168,10 @@ class RoosterBoss(Animal):
         self.shoot_timer = 0
         self.pre_attack_duration = 15
         self.shoot_direction = (0, 0)
-        self.charge_image = pygame.Surface((80, 80))
-        self.charge_image.fill((255, 200, 200))
+        self.charge_right = charge_right
+        self.charge_left = charge_left
+        self.shoot_right = shoot_right
+        self.shoot_left = shoot_left
 
         self.shoot_interval = random.randint(60, 120)
         self.flash_timer = 0
@@ -264,7 +266,15 @@ class RoosterBoss(Animal):
 
     def draw(self, screen, offset_x, offset_y):
         if self.alive:
-            image = self.charge_image if self.shooting else self.image
+            
+            if self.shooting:
+                if self.shoot_timer > 5:
+                    image = self.charge_right if self.direction > 0 else self.charge_left
+                else:
+                    image = self.shoot_right if self.direction > 0 else self.shoot_left
+            else:
+                image = self.image
+
             screen.blit(image, self.rect.move(-offset_x, -offset_y))
         for egg in self.projectiles:
             egg.draw(screen, offset_x, offset_y)
