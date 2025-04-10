@@ -22,160 +22,83 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bad Wolf – Test Zone")
 clock = pygame.time.Clock()
 
-#Background
-background_image = pygame.image.load("data/fond_enclos.png").convert()
+# === Level Selection ===
+selected_level = "enclos"  # Change this to test different levels
+
+# Load level data based on selection
+if selected_level == "enclos":
+    background_image, platforms = create_level_enclos()
+elif selected_level == "etable":
+    background_image, platforms = create_level_etable()
+elif selected_level == "jardin":
+    background_image, platforms = create_level_jardin()
+elif selected_level == "jardin_boss":
+    background_image, platforms = create_level_jardin_boss()
+elif selected_level == "salon":
+    background_image, platforms = create_level_salon()
+elif selected_level == "chambre":
+    background_image, platforms = create_level_chambre()
+
 background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
-
-# Wolf sprites
-left_images_wolf = [
-    pygame.image.load("data/Loup1.png").convert_alpha(),
-    pygame.image.load("data/Loup2.png").convert_alpha(),
-    pygame.image.load("data/Loup3.png").convert_alpha(),
-    pygame.image.load("data/Loup4.png").convert_alpha(),
-    pygame.image.load("data/Loup5.png").convert_alpha(),
-    pygame.image.load("data/Loup6.png").convert_alpha(),
-    pygame.image.load("data/Loup7.png").convert_alpha(),
-    pygame.image.load("data/Loup8.png").convert_alpha(),
-]
-right_images_wolf = [pygame.transform.flip(img, True, False) for img in left_images_wolf]
-
-Wolf.right_images = right_images_wolf
-Wolf.left_images = left_images_wolf
-
-wolf_sit_right = pygame.image.load("data/Loup_sit.png").convert_alpha()
-wolf_sit_left = pygame.transform.flip(wolf_sit_right, True, False)
-
-Wolf.sit_image_right = wolf_sit_right
-Wolf.sit_image_left = wolf_sit_left
-
-# Chicken sprites
-right_images_chicken = [
-    pygame.image.load("data/Poule1.png").convert_alpha(),
-    pygame.image.load("data/Poule2.png").convert_alpha(),
-    pygame.image.load("data/Poule3.png").convert_alpha(),
-    pygame.image.load("data/Poule4.png").convert_alpha(),
-]
-left_images_chicken = [pygame.transform.flip(img, True, False) for img in right_images_chicken]
-
-#Cow sprites
-right_images_cow = [
-    pygame.image.load("data/Vache1.png").convert_alpha(),
-    pygame.image.load("data/Vache2.png").convert_alpha(),
-    pygame.image.load("data/Vache3.png").convert_alpha(),
-]
-left_images_cow = [pygame.transform.flip(img, True, False) for img in right_images_cow]
-
-#Pig sprites
-right_images_pig = [
-    pygame.image.load("data/Cochon1.png").convert_alpha(),
-    pygame.image.load("data/Cochon2.png").convert_alpha(),
-    pygame.image.load("data/Cochon3.png").convert_alpha(),
-    pygame.image.load("data/Cochon4.png").convert_alpha(),
-]
-left_images_pig = [pygame.transform.flip(img, True, False) for img in right_images_pig]
-
-right_images_charger_walk = [
-    pygame.image.load("data/boss_vache_marche_1.png").convert_alpha(),
-    pygame.image.load("data/boss_vache_marche_2.png").convert_alpha()
-]
-left_images_charger_walk = [pygame.transform.flip(img, True, False) for img in right_images_charger_walk]
-
-right_images_charger_charge = [
-    pygame.image.load("data/boss_vache_charge_1.png").convert_alpha(),
-    pygame.image.load("data/boss_vache_charge_2.png").convert_alpha()
-]
-left_images_charger_charge = [pygame.transform.flip(img, True, False) for img in right_images_charger_charge]
-
-# Sprites marche boss cochon
-right_walk_pigboss = [
-    pygame.image.load("data/boss_cochon_1.png").convert_alpha(),
-    pygame.image.load("data/boss_cochon_2.png").convert_alpha(),
-    pygame.image.load("data/boss_cochon_3.png").convert_alpha()
-]
-left_walk_pigboss = [pygame.transform.flip(img, True, False) for img in right_walk_pigboss]
-
-# Sprites charge boss cochon
-right_charge_pigboss = [
-    pygame.image.load("data/boss_cochon_2.png").convert_alpha()
-]
-left_charge_pigboss = [pygame.transform.flip(img, True, False) for img in right_charge_pigboss]
-
-# Dog sprites
-right_walk_dog = [
-    pygame.image.load("data/chien_marche1.png").convert_alpha(),
-    pygame.image.load("data/chien_marche2.png").convert_alpha(),
-    pygame.image.load("data/chien_marche3.png").convert_alpha(),
-    pygame.image.load("data/chien_marche4.png").convert_alpha()
-]
-left_walk_dog = [pygame.transform.flip(img, True, False) for img in right_walk_dog]
-
-dog_jump_prep = pygame.image.load("data/chien_prep_saut.png").convert_alpha()
-dog_jump_air = pygame.image.load("data/chien_saut.png").convert_alpha()
-dog_jump_prep_left = pygame.transform.flip(dog_jump_prep, True, False)
-dog_jump_air_left = pygame.transform.flip(dog_jump_air, True, False)
-
-# Boss final sprites
-boss_walk_images  = [
-    pygame.image.load("data/fermier_marche1.png").convert_alpha(),
-    pygame.image.load("data/fermier_marche2.png").convert_alpha(),
-    pygame.image.load("data/fermier_marche3.png").convert_alpha()
-]
-boss_jump_start  = pygame.image.load("data/fermier_saut1.png").convert_alpha()
-boss_jump_air  = pygame.image.load("data/fermier_saut2.png").convert_alpha()
-boss_attack_ground  = pygame.image.load("data/fermier_saut3.png").convert_alpha()
-
-boss_walk_images_left = [pygame.transform.flip(img, True, False) for img in boss_walk_images]
-boss_jump_start_left = pygame.transform.flip(boss_jump_start, True, False)
-boss_jump_air_left = pygame.transform.flip(boss_jump_air, True, False)
-boss_attack_ground_left = pygame.transform.flip(boss_attack_ground, True, False)
-
-# Sprites de la femme
-femme_walk_images = [
-    pygame.image.load("data/femme_marche1.png").convert_alpha(),
-    pygame.image.load("data/femme_marche2.png").convert_alpha(),
-    pygame.image.load("data/femme_marche3.png").convert_alpha(),
-    pygame.image.load("data/femme_marche4.png").convert_alpha()
-]
-femme_walk_images_left = [pygame.transform.flip(img, True, False) for img in femme_walk_images]
-
-femme_throw_images = [
-    pygame.image.load("data/femme_lancer1.png").convert_alpha(),
-    pygame.image.load("data/femme_lancer2.png").convert_alpha()
-]
-femme_throw_images_left = [pygame.transform.flip(img, True, False) for img in femme_throw_images]
-
-#Boss poulet
-# Marche
-rooster_walk_right = [
-    pygame.image.load("data/boss_poulet_marche1.png").convert_alpha(),
-    pygame.image.load("data/boss_poulet_marche2.png").convert_alpha()
-]
-rooster_walk_left = [pygame.transform.flip(img, True, False) for img in rooster_walk_right]
-
-# Préparation de tir
-rooster_charge_right = pygame.image.load("data/boss_poulet_tire1.png").convert_alpha()
-rooster_charge_left = pygame.transform.flip(rooster_charge_right, True, False)
-
-# Tir
-rooster_shoot_right = pygame.image.load("data/boss_poulet_tire2.png").convert_alpha()
-rooster_shoot_left = pygame.transform.flip(rooster_shoot_right, True, False)
 
 # Entities
 wolf = Wolf((150, 700))
-liste_animals = [
-    #animals.Chicken((1000, 700), right_images_chicken, left_images_chicken),
-    animals.Chicken((1500, 700), right_images_chicken, left_images_chicken),
-    animals.Cow((1200, 700), right_images_cow, left_images_cow),
-    #animals.Cow((1700, 700), right_images_cow, left_images_cow),
-    #animals.Pig((1500, 700), right_images_pig, left_images_pig),
-    #animals.Pig((1900, 700), right_images_pig, left_images_pig),
-    #animals.Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
-    #animals.RoosterBoss((1000, 700),right_images=rooster_walk_right,left_images=rooster_walk_left,charge_right=rooster_charge_right,charge_left=rooster_charge_left,shoot_right=rooster_shoot_right,shoot_left=rooster_shoot_left),
-    animals.Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
-    #animals.PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
-    #animals.FinalBoss((500, 500),walk_right=boss_walk_images,walk_left=boss_walk_images_left,jump_start_right=boss_jump_start,jump_start_left=boss_jump_start_left,jump_air_right=boss_jump_air,jump_air_left=boss_jump_air_left,attack_ground_right=boss_attack_ground,attack_ground_left=boss_attack_ground_left)
-    #animals.BossFemme((1300, 500), femme_walk_images, femme_walk_images_left, femme_throw_images, femme_throw_images_left)
-    ]
+
+    elif level == "enclos":
+        # 1ère tile : quelques vaches et cochons
+        animals_list.append(animals.Pig((400, 300), right_images_pig, left_images_pig))
+        animals_list.append(animals.Pig((800, 700), right_images_pig, left_images_pig))
+        animals_list.append(animals.Cow((900, 400), right_images_cow, left_images_cow))
+        animals_list.append(animals.Cow((1100, 700), right_images_cow, left_images_cow))
+
+        # 2ème tile : boss cochon + cochon
+        animals_list.append(
+            animals.PigBoss((1600, 700), right_walk_pigboss, left_walk_pigboss,
+                            right_charge_pigboss, left_charge_pigboss)
+        )
+        animals_list.append(animals.Pig((1750, 700), right_images_cow, left_images_cow))
+
+    elif level == "jardin":
+        # 1ère tile : poulets, cochons, vaches
+        animals_list.append(animals.Chicken((400, 300), right_images_chicken, left_images_chicken))
+        animals_list.append(animals.Pig((700, 200), right_images_pig, left_images_pig))
+        animals_list.append(animals.Cow((1000, 700), right_images_cow, left_images_cow))
+
+        # 2ème tile : Boss poulet + 1 de chaque
+        rooster_boss = animals.RoosterBoss((1600, 700), right_images_chicken, left_images_chicken)
+        animals_list.append(rooster_boss)
+        animals_list.append(animals.Cow((1800, 700), right_images_cow, left_images_cow))
+        animals_list.append(animals.Pig((1900, 700), right_images_pig, left_images_pig))
+        animals_list.append(animals.Chicken((1700, 700), right_images_chicken, left_images_chicken))
+
+    elif level == "salon":
+        # Plusieurs chiens de garde (niveau salon)
+        animals_list.append(animals.Dog((300, 350), right_walk_dog, left_walk_dog,
+                                            dog_jump_prep, dog_jump_prep_left,
+                                            dog_jump_air, dog_jump_air_left))
+        animals_list.append(animals.Dog((500, 250), right_walk_dog, left_walk_dog,
+                                            dog_jump_prep, dog_jump_prep_left,
+                                            dog_jump_air, dog_jump_air_left))
+        animals_list.append(animals.Dog((1700, 700), right_walk_dog, left_walk_dog,
+                                            dog_jump_prep, dog_jump_prep_left,
+                                            dog_jump_air, dog_jump_air_left))
+        animals_list.append(animals.Dog((100, 700), right_walk_dog, left_walk_dog,
+                                            dog_jump_prep, dog_jump_prep_left,
+                                            dog_jump_air, dog_jump_air_left))
+        
+
+    elif level == "chambre":
+        # Boss fermière
+        animals_list.append(animals.FinalBoss((1200, 700)))
+
+    elif level == "jardin_boss":
+        # Boss fermier
+        animals_list.append(animals.FinalBoss((1200, 700)))
+
+    return animals_list
+
+# Charger les monstres selon le niveau
+liste_animals = load_animals_for_level(selected_level)
 heals = []
 speedboosts = []
 speedboost_timer = 0
@@ -183,25 +106,10 @@ bloods = []
 egg_explosions = []
 frame_counter = 0
 
-# Plateformes
-platforms = [
-    pygame.Rect(0, 800, 3100, 50),
-    #pygame.Rect(200, 700, 120, 20),
-    #pygame.Rect(400, 600, 100, 20),
-    #pygame.Rect(600, 500, 100, 20),
-    #pygame.Rect(850, 700, 150, 20),
-    #pygame.Rect(1050, 600, 100, 20),
-    #pygame.Rect(1250, 500, 120, 20),
-    #pygame.Rect(1450, 400, 120, 20),
-    #pygame.Rect(1650, 650, 100, 20),
-    #pygame.Rect(1750, 550, 100, 20),
-    #pygame.Rect(1800, 450, 80, 20)
-]
 
-moving_platforms = [
-    MovingPlatform(400, 600, 120, 20, dx=2, range_x=200) 
-]
-
+#moving_platforms = [
+ #   MovingPlatform(400, 600, 120, 20, dx=2, range_x=200) 
+#]
 # HUD
 
 heart_image = pygame.image.load("data/heal.png").convert_alpha()
@@ -255,13 +163,13 @@ while running:
     previous_bottom = wolf.rect.bottom
     wolf.move(0, wolf.jump_speed)
 
-    for plat in moving_platforms:
-        plat.update()
+    #for plat in moving_platforms:
+    #    plat.update()
 
 
     # Collisions plateformes
     wolf.jumping = True
-    for platform in platforms + [p.rect for p in moving_platforms]:
+    for platform in platforms :#+ [p.rect for p in moving_platforms]:
         if wolf.rect.colliderect(platform):
             if wolf.jump_speed > 0 and previous_bottom <= platform.top:
                 wolf.rect.bottom = platform.top
@@ -417,8 +325,8 @@ while running:
     for plat in platforms:
         pygame.draw.rect(screen, (100, 100, 100), plat.move(-camera_offset, -camera_y))
 
-    for plat in moving_platforms:
-        plat.draw(screen, camera_offset, camera_y)
+    #for plat in moving_platforms:
+    #    plat.draw(screen, camera_offset, camera_y)
 
 
     for animal in liste_animals:
