@@ -132,8 +132,14 @@ class Charger(Animal):
         self.frame_timer += 1
         if self.frame_timer >= 6:
             self.frame = (self.frame + 1) % len(self.images)
+            
+            # Ajustement du rect pour garder le sol fixe
+            old_midbottom = self.rect.midbottom
             self.image = self.images[self.frame]
+            self.rect = self.image.get_rect(midbottom=old_midbottom)
+
             self.frame_timer = 0
+
         
         self.rect.x += self.speed * self.direction
 

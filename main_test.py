@@ -175,13 +175,13 @@ aura_image = pygame.image.load("data/aura.png").convert_alpha()
 # Entities
 wolf = Wolf((150, 700))
 liste_animals = [
-    animals.Chicken((1000, 700), 0, LEVEL_WIDTH, right_images_chicken, left_images_chicken),
-    animals.Chicken((1500, 700), 0, LEVEL_WIDTH, right_images_chicken, left_images_chicken),
+    #animals.Chicken((1000, 700), 0, LEVEL_WIDTH, right_images_chicken, left_images_chicken),
+    #animals.Chicken((1500, 700), 0, LEVEL_WIDTH, right_images_chicken, left_images_chicken),
     #animals.Cow((1200, 700), 0, LEVEL_WIDTH, right_images_cow, left_images_cow),
     #animals.Cow((1700, 700), 0, LEVEL_WIDTH, right_images_cow, left_images_cow),
     #animals.Pig((1500, 700), right_images_pig, left_images_pig),
     #animals.Pig((1900, 700), right_images_pig, left_images_pig),
-    #animals.Charger((1600, 700), 0,LEVEL_WIDTH, right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
+    animals.Charger((1600, 700), 0,LEVEL_WIDTH, right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
     #animals.RoosterBoss((1000, 700),right_images=rooster_walk_right,left_images=rooster_walk_left,charge_right=rooster_charge_right,charge_left=rooster_charge_left,shoot_right=rooster_shoot_right,shoot_left=rooster_shoot_left),
     #animals.Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
     #animals.Dog((800, 700), 0,LEVEL_WIDTH,right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
