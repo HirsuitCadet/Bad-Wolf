@@ -165,6 +165,11 @@ rooster_charge_left = pygame.transform.flip(rooster_charge_right, True, False)
 rooster_shoot_right = pygame.image.load("data/boss_poulet_tire2.png").convert_alpha()
 rooster_shoot_left = pygame.transform.flip(rooster_shoot_right, True, False)
 
+
+#SONS
+
+intro = pygame.mixer.Sound("data/Son_intro.wav")
+
 #############################################
 
 # Entities
@@ -220,9 +225,7 @@ heart_empty = pygame.image.load("data/health_vide.png").convert_alpha()
 
 running = True
 
-# Gestion du son (on faisait un test, il est commenté pour vos oreilles monsieur croyez-nous)
-#pygame.mixer.music.load("data/Son_intro.wav")
-#pygame.mixer.music.play(-1)  # -1 pour boucle infinie
+intro.play(-1)  # -1 pour boucle infinie
 
 
 # === ÉCRAN DE DÉMARRAGE ===
@@ -239,7 +242,7 @@ while waiting:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 waiting = False
-                #pygame.mixer.music.stop()
+                intro.stop()
 
     pygame.display.flip()
     clock.tick(60)
