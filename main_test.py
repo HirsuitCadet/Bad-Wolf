@@ -2,7 +2,7 @@ import pygame
 import random
 import gamelib.animals as animals
 from gamelib.sprites import Wolf
-from gamelib.items import Heal, SpeedBoost
+from gamelib.items import Heal, SpeedBoost, Shield
 from gamelib.effects import BloodEffect
 
 
@@ -13,7 +13,7 @@ pygame.init()
 # Config 
 SCREEN_WIDTH = 1550
 SCREEN_HEIGHT = 800
-LEVEL_WIDTH = 1900
+LEVEL_WIDTH = 3100
 LEVEL_HEIGHT = 1000
 camera_offset = 0
 camera_y = LEVEL_HEIGHT - SCREEN_HEIGHT
@@ -169,23 +169,27 @@ rooster_charge_left = pygame.transform.flip(rooster_charge_right, True, False)
 rooster_shoot_right = pygame.image.load("data/boss_poulet_tire2.png").convert_alpha()
 rooster_shoot_left = pygame.transform.flip(rooster_shoot_right, True, False)
 
+aura_image = pygame.image.load("data/aura.png").convert_alpha()
 
 
 # Entities
 wolf = Wolf((150, 700))
 liste_animals = [
-    #animals.Chicken((1000, 700), right_images_chicken, left_images_chicken),
-    #animals.Chicken((1500, 700), right_images_chicken, left_images_chicken),
-    #animals.Cow((1200, 700), right_images_cow, left_images_cow),
-    #animals.Cow((1700, 700), right_images_cow, left_images_cow),
+    animals.Chicken((1000, 700), 0, LEVEL_WIDTH, right_images_chicken, left_images_chicken),
+    animals.Chicken((1500, 700), 0, LEVEL_WIDTH, right_images_chicken, left_images_chicken),
+    #animals.Cow((1200, 700), 0, LEVEL_WIDTH, right_images_cow, left_images_cow),
+    #animals.Cow((1700, 700), 0, LEVEL_WIDTH, right_images_cow, left_images_cow),
     #animals.Pig((1500, 700), right_images_pig, left_images_pig),
     #animals.Pig((1900, 700), right_images_pig, left_images_pig),
-    #animals.Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
+    #animals.Charger((1600, 700), 0,LEVEL_WIDTH, right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
     #animals.RoosterBoss((1000, 700),right_images=rooster_walk_right,left_images=rooster_walk_left,charge_right=rooster_charge_right,charge_left=rooster_charge_left,shoot_right=rooster_shoot_right,shoot_left=rooster_shoot_left),
     #animals.Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
-    #animals.PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
-    animals.FinalBoss((500, 500),walk_right=boss_walk_images,walk_left=boss_walk_images_left,jump_start_right=boss_jump_start,jump_start_left=boss_jump_start_left,jump_air_right=boss_jump_air,jump_air_left=boss_jump_air_left,attack_ground_right=boss_attack_ground,attack_ground_left=boss_attack_ground_left),
-    animals.BossFemme((1300, 500), femme_walk_images, femme_walk_images_left, femme_throw_images, femme_throw_images_left)
+    #animals.Dog((800, 700), 0,LEVEL_WIDTH,right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
+    #animals.PigBoss((1700, 700), 0, LEVEL_WIDTH,right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
+    #animals.FinalBoss((500, 500),0, LEVEL_WIDTH,walk_right=boss_walk_images,walk_left=boss_walk_images_left,jump_start_right=boss_jump_start,jump_start_left=boss_jump_start_left,jump_air_right=boss_jump_air,jump_air_left=boss_jump_air_left,attack_ground_right=boss_attack_ground,attack_ground_left=boss_attack_ground_left),
+    #animals.BossFemme((1300, 500), femme_walk_images, femme_walk_images_left, femme_throw_images, femme_throw_images_left)
+    #animals.FinalBoss((500, 500),walk_right=boss_walk_images,walk_left=boss_walk_images_left,jump_start_right=boss_jump_start,jump_start_left=boss_jump_start_left,jump_air_right=boss_jump_air,jump_air_left=boss_jump_air_left,attack_ground_right=boss_attack_ground,attack_ground_left=boss_attack_ground_left),
+    #animals.BossFemme((1300, 500), femme_walk_images, femme_walk_images_left, femme_throw_images, femme_throw_images_left)
     ]
 heals = []
 speedboosts = []
@@ -194,6 +198,10 @@ speedboosts.append(SpeedBoost((600, 700)))
 bloods = []
 egg_explosions = []
 frame_counter = 0
+
+shield_powerups = []
+shield_timer = 0
+
 
 # Plateformes
 platforms = [
@@ -238,6 +246,12 @@ while waiting:
 
 while running:
 
+#A METTRE DANS LE DERNIER NIVEAU
+    # Spawning aléatoire du bouclier (1/800 chance chaque frame)
+    if random.randint(1, 800) == 1:
+        x = random.randint(200, LEVEL_WIDTH - 200)
+        shield_powerups.append(Shield((x, -50)))  # spawn dans le ciel
+
     screen.fill((135, 206, 235))
     screen.blit(background_image, (0, 0))
 
@@ -275,7 +289,11 @@ while running:
 
     # Interactions avec animaux
     
-    for animal in liste_animals:
+    for animal in liste_animals:   
+        # Initialisation du flag de suivi de vie
+        if not hasattr(animal, "was_alive"):
+            animal.was_alive = True
+
         if isinstance(animal, animals.RoosterBoss):
             animal.update(wolf.rect, wolf, platforms)
         elif isinstance(animal, animals.Charger):
@@ -285,7 +303,7 @@ while running:
             
             to_remove = []
             for proj in animal.projectiles:
-                if wolf.rect.colliderect(proj.rect) and wolf.hit_timer <= 0:
+                if wolf.rect.colliderect(proj.rect) and wolf.hit_timer <= 0 and shield_timer <= 0:
                     wolf.take_damage(animal)
                     to_remove.append(proj)
             # Supprime les projectiles qui ont touché le loup
@@ -299,13 +317,13 @@ while running:
                 camera_shake =40 # nombre de frames de secousse
                 animal.shake_on_impact = False
 
-            if animal.charging and wolf.rect.colliderect(animal.rect) and wolf.hit_timer <= 0:
+            if animal.charging and wolf.rect.colliderect(animal.rect) and wolf.hit_timer <= 0 and shield_timer <= 0:
                 wolf.take_damage(animal)
                 camera_shake = 30
             for proj in animal.projectiles:
                 rect, vx, vy = proj
                 pygame.draw.rect(screen, (255, 255, 0), rect.move(-camera_offset, -camera_y))
-                if rect.colliderect(wolf.rect) and wolf.hit_timer <= 0:
+                if rect.colliderect(wolf.rect) and wolf.hit_timer <= 0 and shield_timer <= 0:
                     wolf.take_damage(animal)
             loup_above = (
                     previous_bottom <= animal.rect.top and
@@ -336,6 +354,7 @@ while running:
                     zone_rect.colliderect(wolf.rect)
                     and not loup_above
                     and wolf.hit_timer <= 0
+                    and shield_timer <= 0
                 ):
                     wolf.take_damage(animal)
 
@@ -358,7 +377,7 @@ while running:
                         bloods.append(BloodEffect(animal.rect.center))
                     wolf.jump_speed = -8
 
-                elif wolf.hit_timer <= 0:
+                elif wolf.hit_timer <= 0 and shield_timer <= 0:
                     animal.crush_effect(wolf)
 
         else:
@@ -375,7 +394,7 @@ while running:
             )
 
             if loup_above:
-                if animal.take_damage(1):
+                if animal.take_damage(1) and not isinstance(animal, (animals.Charger, animals.RoosterBoss, animals.PigBoss, animals.BossFemme)):
                     # Si on est dans les 20% de chance
                     if random.randint(1,100) <= 20:
                         # Drop un os avec de la viande au bout 
@@ -393,7 +412,7 @@ while running:
 
                 wolf.jump_speed = -8
 
-            elif wolf.hit_timer <= 0:
+            elif wolf.hit_timer <= 0 and shield_timer <= 0:
                 wolf.take_damage(animal)
                 if isinstance(animal, animals.PigBoss):
                     animal.crush_effect(wolf)
@@ -404,6 +423,17 @@ while running:
 
                     wolf.jump_speed = -20
                     wolf.jumping = True
+
+        if not animal.alive and animal.was_alive:
+            animal.was_alive = False 
+
+            if isinstance(animal, (animals.Charger, animals.RoosterBoss, animals.PigBoss, animals.BossFemme)):
+                x = animal.rect.centerx
+                y = animal.rect.bottom +40 
+                speedboosts.append(SpeedBoost((x, y)))
+
+            elif random.randint(1, 100) <= 20:
+                    heals.append(Heal(animal.rect.center))
 
     # Affichage des heals
     for heal in heals[:]:
@@ -421,7 +451,7 @@ while running:
     
     # Affichage et ramassage des SpeedBoosts
     for boost in speedboosts[:]:
-        boost.update()
+        boost.update(platforms)
         boost.draw(screen, camera_offset, camera_y)
 
         # Ramassage
@@ -433,6 +463,21 @@ while running:
 
         elif boost.timer <= 0:
             speedboosts.remove(boost)
+
+    # Affichage et ramassage des boucliers
+    for shield in shield_powerups[:]:
+        shield.update(platforms)
+        shield.draw(screen, camera_offset, camera_y)
+
+        if wolf.rect.colliderect(shield.rect):
+            shield_powerups.remove(shield)
+            shield_timer = 600  # 10 secondes d’invincibilité
+        elif shield.timer <= 0:
+            shield_powerups.remove(shield)
+    if shield_timer > 0:
+        shield_timer -= 1
+
+
 
     # Fin du boost après 10 secondes
     if speedboost_timer > 0:
@@ -499,6 +544,11 @@ while running:
 
     if camera_shake > 0:
         camera_shake -= 1
+
+    if shield_timer > 0:
+        aura_rect = aura_image.get_rect(center=wolf.rect.center)
+        screen.blit(aura_image, aura_rect.move(-camera_offset, -camera_y))
+
 
     screen.blit(wolf.image, wolf.rect.move(-camera_offset, -camera_y))
 
