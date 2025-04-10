@@ -1,6 +1,13 @@
 import pygame
 import random
 import gamelib.animals as animals
+from Levels.Levels import Levels
+from Levels.Level_1 import Level1
+from Levels.Level_2 import Level2
+from Levels.Level_3 import Level3
+from Levels.Level_4 import Level4
+from Levels.Level_5 import Level5
+from Levels.Level_6 import Level6
 from gamelib.sprites import Wolf
 from gamelib.items import Heal, SpeedBoost, MovingPlatform
 from gamelib.effects import BloodEffect
@@ -10,7 +17,7 @@ pygame.init()
 # Config 
 SCREEN_WIDTH = 1550
 SCREEN_HEIGHT = 800
-LEVEL_WIDTH = 1900
+LEVEL_WIDTH = 3100
 LEVEL_HEIGHT = 1000
 camera_offset = 0
 camera_y = LEVEL_HEIGHT - SCREEN_HEIGHT
@@ -22,90 +29,21 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bad Wolf – Test Zone")
 clock = pygame.time.Clock()
 
-# === Level Selection ===
-selected_level = "enclos"  # Change this to test different levels
-
-# Load level data based on selection
-if selected_level == "enclos":
-    background_image, platforms = create_level_enclos()
-elif selected_level == "etable":
-    background_image, platforms = create_level_etable()
-elif selected_level == "jardin":
-    background_image, platforms = create_level_jardin()
-elif selected_level == "jardin_boss":
-    background_image, platforms = create_level_jardin_boss()
-elif selected_level == "salon":
-    background_image, platforms = create_level_salon()
-elif selected_level == "chambre":
-    background_image, platforms = create_level_chambre()
-
-background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+level = Level1(LEVEL_WIDTH, LEVEL_HEIGHT)
+platforms = level.platforms
+liste_animals = level.animals
+background_image = pygame.transform.scale(level.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
+level_number = 1
 
 # Entities
 wolf = Wolf((150, 700))
 
-    elif level == "enclos":
-        # 1ère tile : quelques vaches et cochons
-        animals_list.append(animals.Pig((400, 300), right_images_pig, left_images_pig))
-        animals_list.append(animals.Pig((800, 700), right_images_pig, left_images_pig))
-        animals_list.append(animals.Cow((900, 400), right_images_cow, left_images_cow))
-        animals_list.append(animals.Cow((1100, 700), right_images_cow, left_images_cow))
-
-        # 2ème tile : boss cochon + cochon
-        animals_list.append(
-            animals.PigBoss((1600, 700), right_walk_pigboss, left_walk_pigboss,
-                            right_charge_pigboss, left_charge_pigboss)
-        )
-        animals_list.append(animals.Pig((1750, 700), right_images_cow, left_images_cow))
-
-    elif level == "jardin":
-        # 1ère tile : poulets, cochons, vaches
-        animals_list.append(animals.Chicken((400, 300), right_images_chicken, left_images_chicken))
-        animals_list.append(animals.Pig((700, 200), right_images_pig, left_images_pig))
-        animals_list.append(animals.Cow((1000, 700), right_images_cow, left_images_cow))
-
-        # 2ème tile : Boss poulet + 1 de chaque
-        rooster_boss = animals.RoosterBoss((1600, 700), right_images_chicken, left_images_chicken)
-        animals_list.append(rooster_boss)
-        animals_list.append(animals.Cow((1800, 700), right_images_cow, left_images_cow))
-        animals_list.append(animals.Pig((1900, 700), right_images_pig, left_images_pig))
-        animals_list.append(animals.Chicken((1700, 700), right_images_chicken, left_images_chicken))
-
-    elif level == "salon":
-        # Plusieurs chiens de garde (niveau salon)
-        animals_list.append(animals.Dog((300, 350), right_walk_dog, left_walk_dog,
-                                            dog_jump_prep, dog_jump_prep_left,
-                                            dog_jump_air, dog_jump_air_left))
-        animals_list.append(animals.Dog((500, 250), right_walk_dog, left_walk_dog,
-                                            dog_jump_prep, dog_jump_prep_left,
-                                            dog_jump_air, dog_jump_air_left))
-        animals_list.append(animals.Dog((1700, 700), right_walk_dog, left_walk_dog,
-                                            dog_jump_prep, dog_jump_prep_left,
-                                            dog_jump_air, dog_jump_air_left))
-        animals_list.append(animals.Dog((100, 700), right_walk_dog, left_walk_dog,
-                                            dog_jump_prep, dog_jump_prep_left,
-                                            dog_jump_air, dog_jump_air_left))
-        
-
-    elif level == "chambre":
-        # Boss fermière
-        animals_list.append(animals.FinalBoss((1200, 700)))
-
-    elif level == "jardin_boss":
-        # Boss fermier
-        animals_list.append(animals.FinalBoss((1200, 700)))
-
-    return animals_list
-
-# Charger les monstres selon le niveau
-liste_animals = load_animals_for_level(selected_level)
 heals = []
 speedboosts = []
 speedboost_timer = 0
 bloods = []
 egg_explosions = []
 frame_counter = 0
-
 
 #moving_platforms = [
  #   MovingPlatform(400, 600, 120, 20, dx=2, range_x=200) 
@@ -134,7 +72,6 @@ while waiting:
 
     pygame.display.flip()
     clock.tick(60)
-
 
 while running:
 
@@ -202,7 +139,50 @@ while running:
                 animal.projectiles.remove(proj)
         elif isinstance(animal, animals.FinalBoss):
             animal.update(wolf, platforms)
-            # ... (le reste de la gestion FinalBoss, inchangé)
+            # Si le boss vient d’atterrir pour son attaque de zone (phase 1), on déclenche le tremblement
+            if animal.shake_on_impact:
+                camera_shake =40 # nombre de frames de secousse
+                animal.shake_on_impact = False
+
+            if animal.charging and wolf.rect.colliderect(animal.rect) and wolf.hit_timer <= 0:
+                wolf.take_damage(animal)
+                camera_shake = 30
+            for proj in animal.projectiles:
+                rect, vx, vy = proj
+                pygame.draw.rect(screen, (255, 255, 0), rect.move(-camera_offset, -camera_y))
+                if rect.colliderect(wolf.rect) and wolf.hit_timer <= 0:
+                    wolf.take_damage(animal)
+            loup_above = (
+                    previous_bottom <= animal.rect.top and
+                    wolf.jump_speed > 0 and
+                    wolf.rect.bottom <= animal.rect.top + 10
+                )
+            if wolf.rect.colliderect(animal.rect):
+
+                if loup_above:
+                    if animal.take_damage(1):
+                        bloods.append(BloodEffect(animal.rect.center))
+                    wolf.jump_speed = -8  # rebond
+
+                elif wolf.hit_timer <= 0 and not animal.attack_zone_active:
+                        wolf.take_damage(animal)
+            # Zone d’impact (attaque au sol)
+            if animal.attack_zone_active:
+                # Position de la zone au sol
+                zone_x = animal.rect.centerx - 300
+                zone_y = animal.rect.bottom - 20
+                zone_rect = pygame.Rect(zone_x, zone_y, 600, 20)
+
+                # Affichage de l'image
+                screen.blit(level.zone_attack_img, (zone_x - camera_offset, zone_y - camera_y))
+
+                # Collision avec le loup
+                if (
+                    zone_rect.colliderect(wolf.rect)
+                    and not loup_above
+                    and wolf.hit_timer <= 0
+                ):
+                    wolf.take_damage(animal)
         elif isinstance(animal, animals.Dog):
             animal.update(wolf, platforms)
         elif isinstance(animal, animals.PigBoss):
@@ -368,9 +348,42 @@ while running:
         if explosion.finished:
             egg_explosions.remove(explosion)
 
-    if wolf.hp <= 0:
-        game_over = True
-        running = False
+    # === Passage au niveau suivant ===
+    if all(not animal.alive for animal in liste_animals):
+        level_number += 1
+
+        if level_number == 2:
+            level = Level2(LEVEL_WIDTH, LEVEL_HEIGHT)
+        elif level_number == 3:
+            level = Level3(LEVEL_WIDTH, LEVEL_HEIGHT)
+        elif level_number == 4:
+            level = Level4(LEVEL_WIDTH, LEVEL_HEIGHT)
+        elif level_number == 5:
+            level = Level5(LEVEL_WIDTH, LEVEL_HEIGHT)
+        elif level_number == 6:
+            level = Level6(LEVEL_WIDTH, LEVEL_HEIGHT)
+        elif level_number > 6:
+            # === FIN DU JEU ===
+            victory_img = pygame.image.load("data/fond_win.png").convert()
+            victory_img = pygame.transform.scale(victory_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
+            screen.blit(victory_img, (0, 0))
+            pygame.display.flip()
+            pygame.time.wait(5000)
+            running = False
+            break
+
+        # Reset du niveau
+        platforms = level.platforms
+        liste_animals = level.animals
+        background_image = pygame.transform.scale(level.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        wolf.rect.topleft = (150, 700)
+        camera_offset = 0
+        camera_y = LEVEL_HEIGHT - SCREEN_HEIGHT
+
+
+    #if wolf.hp <= 0:
+    #    game_over = True
+    #    running = False
 
     pygame.display.flip()
     clock.tick(60)
