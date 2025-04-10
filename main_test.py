@@ -2,22 +2,25 @@ import pygame
 import random
 import gamelib.animals as animals
 from gamelib.sprites import Wolf
-from gamelib.items import Heal, SpeedBoost, MovingPlatform
+from gamelib.items import Heal, SpeedBoost
 from gamelib.effects import BloodEffect
+
+
+
 
 pygame.init()
 
 # Config 
 SCREEN_WIDTH = 1550
 SCREEN_HEIGHT = 800
-LEVEL_START = 0
-LEVEL_WIDTH = 3100
+LEVEL_WIDTH = 1900
 LEVEL_HEIGHT = 1000
 camera_offset = 0
 camera_y = LEVEL_HEIGHT - SCREEN_HEIGHT
 CAMERA_MARGIN_Y = 200
 camera_shake = 0
 game_over = False
+
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bad Wolf – Test Zone")
@@ -26,10 +29,6 @@ clock = pygame.time.Clock()
 #Background
 background_image = pygame.image.load("data/fond_enclos.png").convert()
 background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
-
-# L'explication de la mise en place des sprite a été faite par ChatGPT
-# Nous avons ensuite ajouté les sprites nous-même
-################################################
 
 # Wolf sprites
 left_images_wolf = [
@@ -52,6 +51,7 @@ wolf_sit_left = pygame.transform.flip(wolf_sit_right, True, False)
 
 Wolf.sit_image_right = wolf_sit_right
 Wolf.sit_image_left = wolf_sit_left
+
 
 # Chicken sprites
 right_images_chicken = [
@@ -134,6 +134,10 @@ boss_jump_start_left = pygame.transform.flip(boss_jump_start, True, False)
 boss_jump_air_left = pygame.transform.flip(boss_jump_air, True, False)
 boss_attack_ground_left = pygame.transform.flip(boss_attack_ground, True, False)
 
+#attaque de zone
+zone_attack_img = pygame.image.load("data/attaque_de_zone.png").convert_alpha()
+zone_attack_img = pygame.transform.scale(zone_attack_img, (600, 20))
+
 # Sprites de la femme
 femme_walk_images = [
     pygame.image.load("data/femme_marche1.png").convert_alpha(),
@@ -166,57 +170,45 @@ rooster_shoot_right = pygame.image.load("data/boss_poulet_tire2.png").convert_al
 rooster_shoot_left = pygame.transform.flip(rooster_shoot_right, True, False)
 
 
-#SONS
-
-intro = pygame.mixer.Sound("data/Son_intro.wav")
-
-#############################################
 
 # Entities
 wolf = Wolf((150, 700))
-# La liste de quelques animaux a été ajoutée ici
-# Les deux boss principaux ne sont pas ajouté pour conserver la surprise lors de la présentation
 liste_animals = [
-    animals.Chicken((1000, 700), LEVEL_START, LEVEL_WIDTH, right_images_chicken, left_images_chicken),
-    animals.Chicken((1500, 700), LEVEL_START, LEVEL_WIDTH, right_images_chicken, left_images_chicken),
-    animals.Cow((1200, 700), LEVEL_START, LEVEL_WIDTH, right_images_cow, left_images_cow),
-    animals.Cow((1700, 700), LEVEL_START, LEVEL_WIDTH, right_images_cow, left_images_cow),
-    animals.Pig((1500, 700), LEVEL_START, LEVEL_WIDTH, right_images_pig, left_images_pig),
-    animals.Pig((1900, 700), LEVEL_START, LEVEL_WIDTH, right_images_pig, left_images_pig),
-    animals.Charger((1600, 700), LEVEL_START, LEVEL_WIDTH, right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
-    animals.RoosterBoss((1000, 700), LEVEL_START, LEVEL_WIDTH, right_images=rooster_walk_right,left_images=rooster_walk_left,charge_right=rooster_charge_right,charge_left=rooster_charge_left,shoot_right=rooster_shoot_right,shoot_left=rooster_shoot_left),
-    animals.Dog((800, 700), LEVEL_START, LEVEL_WIDTH, right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
-    animals.PigBoss((1700, 700), LEVEL_START, LEVEL_WIDTH, right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
-]
+    #animals.Chicken((1000, 700), right_images_chicken, left_images_chicken),
+    #animals.Chicken((1500, 700), right_images_chicken, left_images_chicken),
+    #animals.Cow((1200, 700), right_images_cow, left_images_cow),
+    #animals.Cow((1700, 700), right_images_cow, left_images_cow),
+    #animals.Pig((1500, 700), right_images_pig, left_images_pig),
+    #animals.Pig((1900, 700), right_images_pig, left_images_pig),
+    #animals.Charger((1600, 700), right_images_charger_walk, left_images_charger_walk, right_images_charger_charge, left_images_charger_charge),
+    #animals.RoosterBoss((1000, 700),right_images=rooster_walk_right,left_images=rooster_walk_left,charge_right=rooster_charge_right,charge_left=rooster_charge_left,shoot_right=rooster_shoot_right,shoot_left=rooster_shoot_left),
+    #animals.Dog((800, 700), right_walk_dog, left_walk_dog, dog_jump_prep, dog_jump_prep_left, dog_jump_air, dog_jump_air_left),
+    #animals.PigBoss((1700, 700), right_walk_pigboss, left_walk_pigboss, right_charge_pigboss, left_charge_pigboss),
+    animals.FinalBoss((500, 500),walk_right=boss_walk_images,walk_left=boss_walk_images_left,jump_start_right=boss_jump_start,jump_start_left=boss_jump_start_left,jump_air_right=boss_jump_air,jump_air_left=boss_jump_air_left,attack_ground_right=boss_attack_ground,attack_ground_left=boss_attack_ground_left),
+    animals.BossFemme((1300, 500), femme_walk_images, femme_walk_images_left, femme_throw_images, femme_throw_images_left)
+    ]
 heals = []
 speedboosts = []
 speedboost_timer = 0
+speedboosts.append(SpeedBoost((600, 700)))
 bloods = []
 egg_explosions = []
 frame_counter = 0
 
 # Plateformes
-# Cette liste éphémère a été réalisée par ChatGPT
-#################################################
 platforms = [
     pygame.Rect(0, 800, 3100, 50),
-    pygame.Rect(200, 700, 120, 20),
-    pygame.Rect(400, 600, 100, 20),
-    pygame.Rect(600, 500, 100, 20),
-    pygame.Rect(850, 700, 150, 20),
-    pygame.Rect(1050, 600, 100, 20),
-    pygame.Rect(1250, 500, 120, 20),
-    pygame.Rect(1450, 400, 120, 20),
-    pygame.Rect(1650, 650, 100, 20),
-    pygame.Rect(1750, 550, 100, 20),
-    pygame.Rect(1800, 450, 80, 20)
+    #pygame.Rect(200, 700, 120, 20),
+    #pygame.Rect(400, 600, 100, 20),
+    #pygame.Rect(600, 500, 100, 20),
+    #pygame.Rect(850, 700, 150, 20),
+    #pygame.Rect(1050, 600, 100, 20),
+    #pygame.Rect(1250, 500, 120, 20),
+    #pygame.Rect(1450, 400, 120, 20),
+    #pygame.Rect(1650, 650, 100, 20),
+    #pygame.Rect(1750, 550, 100, 20),
+    #pygame.Rect(1800, 450, 80, 20)
 ]
-
-moving_platforms = [
-    MovingPlatform(400, 600, 120, 20, dx=2, range_x=200) 
-]
-
-#################################################
 
 # HUD
 
@@ -224,9 +216,6 @@ heart_image = pygame.image.load("data/heal.png").convert_alpha()
 heart_empty = pygame.image.load("data/health_vide.png").convert_alpha()
 
 running = True
-
-intro.play(-1)  # -1 pour boucle infinie
-
 
 # === ÉCRAN DE DÉMARRAGE ===
 waiting = True
@@ -242,10 +231,10 @@ while waiting:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 waiting = False
-                intro.stop()
 
     pygame.display.flip()
     clock.tick(60)
+
 
 while running:
 
@@ -274,12 +263,9 @@ while running:
     previous_bottom = wolf.rect.bottom
     wolf.move(0, wolf.jump_speed)
 
-    for plat in moving_platforms:
-        plat.update()
-
     # Collisions plateformes
     wolf.jumping = True
-    for platform in platforms + [p.rect for p in moving_platforms]:
+    for platform in platforms:
         if wolf.rect.colliderect(platform):
             if wolf.jump_speed > 0 and previous_bottom <= platform.top:
                 wolf.rect.bottom = platform.top
@@ -290,80 +276,134 @@ while running:
     # Interactions avec animaux
     
     for animal in liste_animals:
-        # Initialisation du flag de suivi de vie
-        if not hasattr(animal, "was_alive"):
-            animal.was_alive = True
-
-        # === Update selon le type ===
         if isinstance(animal, animals.RoosterBoss):
             animal.update(wolf.rect, wolf, platforms)
         elif isinstance(animal, animals.Charger):
             animal.update(wolf)
         elif isinstance(animal, animals.BossFemme):
             animal.update(wolf, platforms)
-
+            
             to_remove = []
             for proj in animal.projectiles:
                 if wolf.rect.colliderect(proj.rect) and wolf.hit_timer <= 0:
                     wolf.take_damage(animal)
                     to_remove.append(proj)
-
+            # Supprime les projectiles qui ont touché le loup
             for proj in to_remove:
                 animal.projectiles.remove(proj)
+
         elif isinstance(animal, animals.FinalBoss):
             animal.update(wolf, platforms)
+            # Si le boss vient d’atterrir pour son attaque de zone (phase 1), on déclenche le tremblement
+            if animal.shake_on_impact:
+                camera_shake =40 # nombre de frames de secousse
+                animal.shake_on_impact = False
+
+            if animal.charging and wolf.rect.colliderect(animal.rect) and wolf.hit_timer <= 0:
+                wolf.take_damage(animal)
+                camera_shake = 30
+            for proj in animal.projectiles:
+                rect, vx, vy = proj
+                pygame.draw.rect(screen, (255, 255, 0), rect.move(-camera_offset, -camera_y))
+                if rect.colliderect(wolf.rect) and wolf.hit_timer <= 0:
+                    wolf.take_damage(animal)
+            loup_above = (
+                    previous_bottom <= animal.rect.top and
+                    wolf.jump_speed > 0 and
+                    wolf.rect.bottom <= animal.rect.top + 10
+                )
+            if wolf.rect.colliderect(animal.rect):
+
+                if loup_above:
+                    if animal.take_damage(1):
+                        bloods.append(BloodEffect(animal.rect.center))
+                    wolf.jump_speed = -8  # rebond
+
+                elif wolf.hit_timer <= 0 and not animal.attack_zone_active:
+                        wolf.take_damage(animal)
+            # Zone d’impact (attaque au sol)
+            if animal.attack_zone_active:
+                # Position de la zone au sol
+                zone_x = animal.rect.centerx - 300
+                zone_y = animal.rect.bottom - 20
+                zone_rect = pygame.Rect(zone_x, zone_y, 600, 20)
+
+                # Affichage de l'image
+                screen.blit(zone_attack_img, (zone_x - camera_offset, zone_y - camera_y))
+
+                # Collision avec le loup
+                if (
+                    zone_rect.colliderect(wolf.rect)
+                    and not loup_above
+                    and wolf.hit_timer <= 0
+                ):
+                    wolf.take_damage(animal)
+
         elif isinstance(animal, animals.Dog):
             animal.update(wolf, platforms)
         elif isinstance(animal, animals.PigBoss):
             animal.update(wolf=wolf, platforms=platforms)
             if wolf.rect.colliderect(animal.rect):
                 loup_above_boss = (
-                    previous_bottom <= animal.rect.top + 5 and
+                    previous_bottom <= animal.rect.top and
                     wolf.jump_speed > 0 and
-                    wolf.rect.centery < animal.rect.top
+                    wolf.rect.bottom <= animal.rect.top + 10
                 )
+                
                 if loup_above_boss:
                     if animal.take_damage(1):
                         animal.knockback()
+                        if random.randint(1, 100) <= 20:
+                            heals.append(Heal(animal.rect.center))
                         bloods.append(BloodEffect(animal.rect.center))
-                        wolf.jump_speed = -8
+                    wolf.jump_speed = -8
+
                 elif wolf.hit_timer <= 0:
                     animal.crush_effect(wolf)
+
         else:
             animal.update(platforms)
 
-        # === Collisions génériques avec loup ===
         if not animal.alive:
             continue
 
-        if wolf.rect.colliderect(animal.rect) and not isinstance(animal, (animals.PigBoss, animals.FinalBoss)):
+        if wolf.rect.colliderect(animal.rect) and not isinstance(animal, animals.PigBoss) and not isinstance(animal, animals.FinalBoss):
             loup_above = (
-                previous_bottom <= animal.rect.top + 5 and
+                previous_bottom <= animal.rect.top and
                 wolf.jump_speed > 0 and
-                wolf.rect.centery < animal.rect.centery
+                wolf.rect.bottom <= animal.rect.top + 10
             )
+
             if loup_above:
                 if animal.take_damage(1):
+                    # Si on est dans les 20% de chance
+                    if random.randint(1,100) <= 20:
+                        # Drop un os avec de la viande au bout 
+                        heal_x = animal.rect.centerx
+                        heal_y = animal.rect.centery  # pour poser au sol, ajustable selon taille du sprite
+                        heals.append(Heal((heal_x, heal_y)))
+
+                    # Calcul dynamique du point d’impact en bas du mob
+                    if isinstance(animal, animals.PigBoss):
+                        print("PigBoss rect:", animal.rect)
+                        print("Blood position:", animal.get_blood_position())
+
                     bloods.append(BloodEffect(animal.get_blood_position()))
-                    wolf.jump_speed = -8
+
+
+                wolf.jump_speed = -8
+
             elif wolf.hit_timer <= 0:
                 wolf.take_damage(animal)
+                if isinstance(animal, animals.PigBoss):
+                    animal.crush_effect(wolf)
+
+                # Knockback si c'est un Charger
                 if isinstance(animal, animals.Charger):
-                    camera_shake = 50
+                    camera_shake = 50  # durée de la secousse en frames
+
                     wolf.jump_speed = -20
                     wolf.jumping = True
-        # Code produit avec ChatGPT 
-        #################################################
-        # === DROP UNIQUE À LA MORT ===
-        if not animal.alive and animal.was_alive:
-            animal.was_alive = False  # on évite les répétitions
-
-            if isinstance(animal, (animals.Charger, animals.RoosterBoss, animals.PigBoss, animals.BossFemme)):
-                speedboosts.append(SpeedBoost(animal.rect.center))
-            else:
-                if random.randint(1, 100) <= 20:
-                    heals.append(Heal(animal.rect.center))        
-        #################################################
 
     # Affichage des heals
     for heal in heals[:]:
@@ -402,10 +442,10 @@ while running:
             wolf.jump = lambda: setattr(wolf, 'jump_speed', -13) or setattr(wolf, 'jumping', True)
 
     # Affichage des effets
-    explosion_frame_duration = 25
+    explosion_frame_duration = 25  # plus la valeur est grande, plus l'explosion est lente
 
     for blood in bloods[:]:
-        if isinstance(blood, tuple):
+        if isinstance(blood, tuple):  # Animation d'explosion d'œuf
             img, pos, delay = blood
             if frame_counter >= delay * explosion_frame_duration:
                 screen.blit(img, (pos[0] - camera_offset, pos[1] - camera_y))
@@ -416,8 +456,6 @@ while running:
             if blood.finished:
                 bloods.remove(blood)
 
-    # Les deux scrolls ont été réalisé avec ChatGPT
-    #################################################
     # Scroll horizontal
     if wolf.rect.right > camera_offset + SCREEN_WIDTH:
         if camera_offset + SCREEN_WIDTH < LEVEL_WIDTH:
@@ -433,22 +471,16 @@ while running:
         camera_y = max(0, wolf.rect.top - CAMERA_MARGIN_Y)
     elif wolf.rect.bottom > camera_y + SCREEN_HEIGHT - CAMERA_MARGIN_Y:
         camera_y = min(LEVEL_HEIGHT - SCREEN_HEIGHT, wolf.rect.bottom - SCREEN_HEIGHT + CAMERA_MARGIN_Y)
-    #################################################
 
     # DESSIN
     for plat in platforms:
         pygame.draw.rect(screen, (100, 100, 100), plat.move(-camera_offset, -camera_y))
-
-    for plat in moving_platforms:
-        plat.draw(screen, camera_offset, camera_y)
-
 
     for animal in liste_animals:
         animal.draw(screen, camera_offset, camera_y)
 
     wolf.update()
 
-    #CODE FAIT AVEC CHATGPT#################### 
     # Gestion du ralentissement temporaire par le boss cochon
     if hasattr(wolf, 'slowed_timer') and wolf.slowed_timer > 0:
         wolf.slowed_timer -= 1
@@ -469,7 +501,6 @@ while running:
         camera_shake -= 1
 
     screen.blit(wolf.image, wolf.rect.move(-camera_offset, -camera_y))
-    ###########################################""
 
     for i in range(wolf.max_health):
         image = heart_image if i < wolf.hp else heart_empty
@@ -477,8 +508,6 @@ while running:
 
     frame_counter += 1
 
-    # Code fait avec ChatGPT
-    #################################################
     # Affichage des effets d'explosion d'œufs
     for explosion in egg_explosions[:]:
         explosion.update()
@@ -486,15 +515,13 @@ while running:
         if explosion.finished:
             egg_explosions.remove(explosion)
 
-    #################################################
-
     if wolf.hp <= 0:
         game_over = True
         running = False
 
     pygame.display.flip()
     clock.tick(60)
-# ÉCRAN DE GAME OVER
+# === ÉCRAN DE GAME OVER ===
 if game_over:
     title_font = pygame.font.Font(None, 80)
     info_font = pygame.font.Font(None, 40)
