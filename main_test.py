@@ -138,6 +138,11 @@ boss_attack_ground_left = pygame.transform.flip(boss_attack_ground, True, False)
 zone_attack_img = pygame.image.load("data/attaque_de_zone.png").convert_alpha()
 zone_attack_img = pygame.transform.scale(zone_attack_img, (600, 20))
 
+fork_image = pygame.image.load("data/fourche.png").convert_alpha()
+
+
+
+
 # Sprites de la femme
 femme_walk_images = [
     pygame.image.load("data/femme_marche1.png").convert_alpha(),
@@ -304,7 +309,8 @@ while running:
                 camera_shake = 30
             for proj in animal.projectiles:
                 rect, vx, vy = proj
-                pygame.draw.rect(screen, (255, 255, 0), rect.move(-camera_offset, -camera_y))
+                screen.blit(fork_image, rect.move(-camera_offset, -camera_y))
+
                 if rect.colliderect(wolf.rect) and wolf.hit_timer <= 0:
                     wolf.take_damage(animal)
             loup_above = (
