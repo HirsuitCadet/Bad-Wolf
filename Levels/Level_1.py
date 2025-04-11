@@ -38,7 +38,7 @@ class Level1(Levels):
         animals_list.append(animals.Cow((1200, 700), start_level, end_level,self.right_images_cow, self.left_images_cow))
         animals_list.append(animals.Cow((1600, 500), start_level, end_level,self.right_images_cow, self.left_images_cow))
         animals_list.append(animals.Charger(
-            (1800, 800), start_level, end_level,
+            (1800, 785), start_level, end_level,
             self.right_images_charger_walk, self.left_images_charger_walk,
             self.right_images_charger_charge, self.left_images_charger_charge
         ))

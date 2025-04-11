@@ -31,11 +31,11 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bad Wolf – Test Zone")
 clock = pygame.time.Clock()
 
-level = Level6(LEVEL_WIDTH, LEVEL_HEIGHT)
+level = Level1(LEVEL_WIDTH, LEVEL_HEIGHT)
 platforms = level.platforms
 liste_animals = level.animals
 background_image = pygame.transform.scale(level.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
-level_number = 6
+level_number = 1
 
 # Entities
 wolf = Wolf((150, 700))
@@ -47,7 +47,7 @@ bloods = []
 egg_explosions = []
 frame_counter = 0
 shield_timer = 0
-shield_spawn_timer = random.randint(180, 180)
+shield_spawn_timer = random.randint(180, 600)
 
 #moving_platforms = [
  #   MovingPlatform(400, 600, 120, 20, dx=2, range_x=200) 
@@ -274,7 +274,7 @@ while running:
         if shield_spawn_timer <= 0:
             x = random.randint(100, LEVEL_WIDTH - 100)
             level.shield_powerups.append(Shield((x, -50)))
-            shield_spawn_timer = random.randint(180, 180)
+            shield_spawn_timer = random.randint(180, 600)
 
     # Affichage des heals
     for heal in heals[:]:
@@ -283,7 +283,7 @@ while running:
 
         # Ramassage
         if wolf.rect.colliderect(heal.rect):
-            wolf.hp = min(wolf.hp + 1, wolf.max_health)
+            wolf.health = min(wolf.health + 1, wolf.max_health)
             heals.remove(heal)
 
         # Disparition naturelle
@@ -306,16 +306,17 @@ while running:
             speedboosts.remove(boost)
 
     # Affichage et ramassage des boucliers
-    for shield in level.shield_powerups[:]:
-        shield.update(platforms)
-        shield.draw(screen, camera_offset, camera_y)
+    if hasattr(level, "shield_powerups"):
+        for shield in level.shield_powerups[:]:
+            shield.update(platforms)
+            shield.draw(screen, camera_offset, camera_y)
 
-        if wolf.rect.colliderect(shield.rect):
-            level.shield_powerups.remove(shield)
-            shield_timer = 600  # 10 secondes d’invincibilité
+            if wolf.rect.colliderect(shield.rect):
+                level.shield_powerups.remove(shield)
+                shield_timer = 600  # 10 secondes d’invincibilité
 
-        elif shield.timer <= 0:
-            level.shield_powerups.remove(shield)
+            elif shield.timer <= 0:
+                level.shield_powerups.remove(shield)
 
     if shield_timer > 0:
         shield_timer -= 1
@@ -394,7 +395,7 @@ while running:
     screen.blit(wolf.image, wolf.rect.move(-camera_offset, -camera_y))
 
     for i in range(wolf.max_health):
-        image = heart_image if i < wolf.hp else heart_empty
+        image = heart_image if i < wolf.health else heart_empty
         screen.blit(image, (10 + i * 45, 10))
 
     frame_counter += 1
@@ -455,9 +456,9 @@ while running:
         camera_y = LEVEL_HEIGHT - SCREEN_HEIGHT
 
 
-    #if wolf.hp <= 0:
-    #    game_over = True
-    #    running = False
+    if wolf.health <= 0:
+        game_over = True
+        running = False
 
     pygame.display.flip()
     clock.tick(60)

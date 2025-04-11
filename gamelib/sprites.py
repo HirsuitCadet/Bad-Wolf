@@ -19,7 +19,6 @@ class Wolf(pygame.sprite.Sprite):
 
         self.max_health = 3
         self.health = 3
-        self.hp = self.health
         self.hit_timer = 0
         self.flash_timer = 0
 
@@ -67,7 +66,6 @@ class Wolf(pygame.sprite.Sprite):
     def take_damage(self, enemy):
         if self.hit_timer <= 0:
             self.health -= 1
-            self.hp = self.health
             self.hit_timer = 180  # 3 secondes d'invulnérabilité
             self.flash_timer = 6  # petit flash visuel
             self.knockback_speed = 12
@@ -80,12 +78,12 @@ class Wolf(pygame.sprite.Sprite):
     def projectile_damage(self):
         if self.hit_timer <= 0:
             self.health -= 1
-            self.hp = self.health
             self.hit_timer = 180  
             self.flash_timer = 6  
 
     def heal(self):
-        self.health += 1
+        if self.health < self.max_health:
+            self.health += 1
 
     def update(self):
         if self.hit_timer > 0:
