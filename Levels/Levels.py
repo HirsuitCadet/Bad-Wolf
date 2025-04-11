@@ -99,6 +99,11 @@ class Levels():
         self.boss_attack_ground = pygame.image.load("data/fermier_saut3.png").convert_alpha()
 
         self.boss_walk_images_left = [pygame.transform.flip(img, True, False) for img in self.boss_walk_images]
+        self.boss_charge_images = [
+            pygame.image.load("data/fermier_charge1.png").convert_alpha(),
+            pygame.image.load("data/fermier_charge2.png").convert_alpha()
+        ]
+        self.boss_charge_images_left = [pygame.transform.flip(img, True, False) for img in self.boss_charge_images]
         self.boss_jump_start_left = pygame.transform.flip(self.boss_jump_start, True, False)
         self.boss_jump_air_left = pygame.transform.flip(self.boss_jump_air, True, False)
         self.boss_attack_ground_left = pygame.transform.flip(self.boss_attack_ground, True, False)

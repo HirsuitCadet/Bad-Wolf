@@ -35,7 +35,7 @@ class Level6(Levels):
         animals_list = []
         animals_list.append(animals.FinalBoss(
             (1200, 700), start_level, end_level,
-            self.boss_walk_images, self.boss_walk_images_left, self.boss_jump_start, self.boss_jump_start_left,
+            self.boss_walk_images, self.boss_walk_images_left, self.boss_charge_images, self.boss_charge_images_left, self.boss_jump_start, self.boss_jump_start_left,
             self.boss_jump_air, self.boss_jump_air_left, self.boss_attack_ground, self.boss_attack_ground_left
         ))
         return animals_list

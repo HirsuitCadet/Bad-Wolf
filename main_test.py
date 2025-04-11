@@ -31,11 +31,11 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bad Wolf – Test Zone")
 clock = pygame.time.Clock()
 
-level = Level1(LEVEL_WIDTH, LEVEL_HEIGHT)
+level = Level6(LEVEL_WIDTH, LEVEL_HEIGHT)
 platforms = level.platforms
 liste_animals = level.animals
 background_image = pygame.transform.scale(level.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
-level_number = 1
+level_number = 6
 
 # Entities
 wolf = Wolf((150, 700))
@@ -422,11 +422,6 @@ while running:
         elif level_number == 6:
             level = Level6(LEVEL_WIDTH, LEVEL_HEIGHT)
         elif level_number > 6:
-            if wolf.rect.colliderect(level.shield.rect):
-                level.shield_powerups.remove(level.shield)
-                shield_timer = 600  # 10 secondes d’invincibilité
-            elif level.shield.timer <= 0:
-                    level.shield_powerups.remove(level.shield)
             if shield_timer > 0:
                 shield_timer -= 1
             

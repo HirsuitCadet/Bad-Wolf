@@ -515,7 +515,7 @@ class PigBoss(Animal):
 
 
 class FinalBoss(Animal):
-    def __init__(self, pos, start_level, end_level, walk_right, walk_left, jump_start_right, jump_start_left, jump_air_right, jump_air_left, attack_ground_right, attack_ground_left):
+    def __init__(self, pos, start_level, end_level, walk_right, walk_left, charge_right, charge_left, jump_start_right, jump_start_left, jump_air_right, jump_air_left, attack_ground_right, attack_ground_left):
         # 3 phases : rouge, orange, violet
         self.phase = 1
         surface1 = pygame.Surface((50, 50), pygame.SRCALPHA)
@@ -535,6 +535,8 @@ class FinalBoss(Animal):
 
         self.walk_right = walk_right
         self.walk_left = walk_left
+        self.charge_right = charge_right
+        self.charge_left = charge_left
         self.jump_start_right = jump_start_right
         self.jump_start_left = jump_start_left
         self.jump_air_right = jump_air_right
@@ -772,6 +774,8 @@ class FinalBoss(Animal):
             # Charge en cours
             self.rect.x += self.speed * self.direction
             self.current_charge_time += 1
+            image = self.charge_right if self.direction > 0 else self.charge_left
+            self.set_image(image)
 
             # Rebonds aux limites
             if self.rect.left < 0:
