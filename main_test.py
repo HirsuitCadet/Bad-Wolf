@@ -31,11 +31,11 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bad Wolf – Test Zone")
 clock = pygame.time.Clock()
 
-level = Level1(LEVEL_WIDTH, LEVEL_HEIGHT)
+level = Level3(LEVEL_WIDTH, LEVEL_HEIGHT)
 platforms = level.platforms
 liste_animals = level.animals
 background_image = pygame.transform.scale(level.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
-level_number = 1
+level_number = 3
 
 # Entities
 wolf = Wolf((150, 700))
@@ -128,7 +128,7 @@ while running:
         if not hasattr(animal, "was_alive"):
             animal.was_alive = True        
         if isinstance(animal, animals.RoosterBoss):
-            animal.update(wolf.rect, wolf, level, platforms)
+            animal.update(wolf.rect, wolf, platforms, level)
         elif isinstance(animal, animals.Charger):
             animal.update(wolf)
         elif isinstance(animal, animals.BossFemme):

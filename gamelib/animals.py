@@ -197,6 +197,9 @@ class RoosterBoss(Animal):
         self.rect = self.image.get_rect(topleft=pos)
 
     def update(self, wolf_rect=None, wolf=None, effects=None, level=None, current_frame=None):
+        if level:
+            self.level = level
+
         if not self.alive:
             for egg in self.projectiles:
                 egg.update()
@@ -290,6 +293,21 @@ class RoosterBoss(Animal):
 
         self.projectiles = [egg for egg in self.projectiles if not egg.finished]
         #################################################
+    def take_damage(self, amount):
+        if self.invincibility_timer > 0:
+            return False
+
+        self.health -= amount
+        self.flash_timer = 10
+        self.invincibility_timer = 20
+
+        # ✅ Son dégâts boss poulet
+        if hasattr(self, "level") and hasattr(self.level, "son_boss_poulet_degat"):
+            self.level.son_boss_poulet_degat.play()
+
+        if self.health <= 0:
+            self.alive = False
+        return True
 
     def draw(self, screen, offset_x, offset_y):
         if self.alive:

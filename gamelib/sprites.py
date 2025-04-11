@@ -17,8 +17,8 @@ class Wolf(pygame.sprite.Sprite):
         self.move_speed = 6
         self.jumping = False
 
-        self.max_health = 3333
-        self.health = 3333
+        self.max_health = 333
+        self.health = 333
         self.hit_timer = 0
         self.flash_timer = 0
 
