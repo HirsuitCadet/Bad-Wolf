@@ -17,8 +17,8 @@ class Wolf(pygame.sprite.Sprite):
         self.move_speed = 6
         self.jumping = False
 
-        self.max_health = 3
-        self.health = 3
+        self.max_health = 3333
+        self.health = 3333
         self.hit_timer = 0
         self.flash_timer = 0
 
@@ -63,7 +63,8 @@ class Wolf(pygame.sprite.Sprite):
         self.jump_speed = -13
         self.jumping = True
 
-    def take_damage(self, enemy):
+    def take_damage(self, enemy, level):
+        level.son_loup_degat.play()
         if self.hit_timer <= 0:
             self.health -= 1
             self.hit_timer = 180  # 3 secondes d'invulnérabilité
@@ -75,7 +76,8 @@ class Wolf(pygame.sprite.Sprite):
             else:
                 self.knockback_direction = -1
 
-    def projectile_damage(self):
+    def projectile_damage(self, level):
+        level.son_loup_degat.play()
         if self.hit_timer <= 0:
             self.health -= 1
             self.hit_timer = 180  

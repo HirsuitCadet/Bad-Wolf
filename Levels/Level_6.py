@@ -7,7 +7,8 @@ from Levels.Levels import Levels
 class Level6(Levels):
     def __init__(self, level_width, level_height):
         super().__init__()
-
+        self.son_boss.play()
+        self.son_spawn_fermier.play()
         self.background = pygame.image.load("data/fond_jardin_boss.png").convert()
         self.background = pygame.transform.scale(self.background, (level_width, level_height))
 

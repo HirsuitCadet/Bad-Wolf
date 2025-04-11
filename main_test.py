@@ -31,11 +31,11 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Bad Wolf – Test Zone")
 clock = pygame.time.Clock()
 
-level = Level6(LEVEL_WIDTH, LEVEL_HEIGHT)
+level = Level1(LEVEL_WIDTH, LEVEL_HEIGHT)
 platforms = level.platforms
 liste_animals = level.animals
 background_image = pygame.transform.scale(level.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
-level_number = 6
+level_number = 1
 
 # Entities
 wolf = Wolf((150, 700))
@@ -58,13 +58,14 @@ heart_image = pygame.image.load("data/heal.png").convert_alpha()
 heart_empty = pygame.image.load("data/health_vide.png").convert_alpha()
 
 running = True
-
+level.debut_jeu.play(-1)
 # === ÉCRAN DE DÉMARRAGE ===
 waiting = True
 while waiting:
     start_img = pygame.image.load("data/start_screen.png").convert()
     start_img = pygame.transform.scale(start_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
     screen.blit(start_img, (0, 0))
+    
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -73,6 +74,8 @@ while waiting:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 waiting = False
+                level.debut_jeu.stop()
+                level.fond_jeu.play(-1)
 
     pygame.display.flip()
     clock.tick(60)
@@ -123,10 +126,9 @@ while running:
     for animal in liste_animals:   
         # Initialisation du flag de suivi de vie
         if not hasattr(animal, "was_alive"):
-            animal.was_alive = True
-
+            animal.was_alive = True        
         if isinstance(animal, animals.RoosterBoss):
-            animal.update(wolf.rect, wolf, platforms)
+            animal.update(wolf.rect, wolf, level, platforms)
         elif isinstance(animal, animals.Charger):
             animal.update(wolf)
         elif isinstance(animal, animals.BossFemme):
@@ -135,7 +137,7 @@ while running:
             to_remove = []
             for proj in animal.projectiles:
                 if wolf.rect.colliderect(proj.rect) and wolf.hit_timer <= 0 and shield_timer <= 0:
-                    wolf.take_damage(animal)
+                    wolf.take_damage(animal, level)
                     to_remove.append(proj)
             # Supprime les projectiles qui ont touché le loup
             for proj in to_remove:
@@ -149,7 +151,7 @@ while running:
                 animal.shake_on_impact = False
 
             if animal.charging and wolf.rect.colliderect(animal.rect) and wolf.hit_timer <= 0 and shield_timer <= 0:
-                wolf.take_damage(animal)
+                wolf.take_damage(animal,level)
                 camera_shake = 30
             for proj in animal.projectiles:
                 rect, vx, vy = proj
@@ -158,7 +160,7 @@ while running:
                 rotated_rect = rotated_fork.get_rect(center=rect.center)
                 screen.blit(rotated_fork, rotated_rect.move(-camera_offset, -camera_y))
                 if rect.colliderect(wolf.rect) and wolf.hit_timer <= 0 and shield_timer <= 0:
-                    wolf.take_damage(animal)
+                    wolf.take_damage(animal,level)
             loup_above = (
                     previous_bottom <= animal.rect.top and
                     wolf.jump_speed > 0 and
@@ -168,11 +170,12 @@ while running:
 
                 if loup_above:
                     if animal.take_damage(1):
+                        level.son_fermier_degat.play()
                         bloods.append(BloodEffect(animal.rect.center))
                     wolf.jump_speed = -8  # rebond
 
                 elif wolf.hit_timer <= 0 and not animal.attack_zone_active and shield_timer <=0:
-                        wolf.take_damage(animal)
+                        wolf.take_damage(animal,level)
             # Zone d’impact (attaque au sol)
             if animal.attack_zone_active:
                 # Position de la zone au sol
@@ -190,7 +193,7 @@ while running:
                     and wolf.hit_timer <= 0
                     and shield_timer <= 0
                 ):
-                    wolf.take_damage(animal)
+                    wolf.take_damage(animal,level)
 
         elif isinstance(animal, animals.Dog):
             animal.update(wolf, platforms)
@@ -205,6 +208,7 @@ while running:
                 
                 if loup_above_boss:
                     if animal.take_damage(1):
+                        level.son_boss_cochon_degat.play()
                         animal.knockback()
                         if random.randint(1, 100) <= 20:
                             heals.append(Heal(animal.rect.center))
@@ -212,7 +216,7 @@ while running:
                     wolf.jump_speed = -8
 
                 elif wolf.hit_timer <= 0 and shield_timer <= 0:
-                    animal.crush_effect(wolf)
+                    animal.crush_effect(wolf, level)
 
         else:
             animal.update(platforms)
@@ -229,6 +233,16 @@ while running:
 
             if loup_above:
                 if animal.take_damage(1) and not isinstance(animal, (animals.Charger, animals.RoosterBoss, animals.PigBoss, animals.BossFemme)):
+                    # Effets sonores selon l'animal touché
+                    if isinstance(animal, animals.Chicken):
+                        level.son_poulet_mort.play()
+                    elif isinstance(animal, animals.Cow):
+                        level.son_vache_mort.play()
+                    elif isinstance(animal, animals.Pig):
+                        level.son_cochon_mort.play()
+                    elif isinstance(animal, animals.Dog):
+                        level.son_chien_mort.play()
+                    
                     # Si on est dans les 20% de chance
                     if random.randint(1,100) <= 20:
                         # Drop un os avec de la viande au bout 
@@ -243,11 +257,20 @@ while running:
 
                     bloods.append(BloodEffect(animal.get_blood_position()))
 
+                else:
+                    # Son de dégât (animal toujours vivant)
+                    if isinstance(animal, animals.Chicken):
+                        level.son_poulet_degat.play()
+                    elif isinstance(animal, animals.Cow):
+                        level.son_vache_degat.play()
+                    elif isinstance(animal, animals.Pig):
+                        level.son_cochon_degat.play()
+                    elif isinstance(animal, animals.Dog):
+                        level.son_chien_degat.play()
 
                 wolf.jump_speed = -8
-
             elif wolf.hit_timer <= 0 and shield_timer <= 0:
-                wolf.take_damage(animal)
+                wolf.take_damage(animal,level)
                 if isinstance(animal, animals.PigBoss):
                     animal.crush_effect(wolf)
 
@@ -262,20 +285,31 @@ while running:
             animal.was_alive = False 
 
             if isinstance(animal, (animals.Charger, animals.RoosterBoss, animals.PigBoss, animals.BossFemme)):
+                if isinstance(animal, animals.Charger):
+                    level.son_boss_vache_mort.play()
+                elif isinstance(animal, animals.PigBoss):
+                    level.son_boss_cochon_mort.play()
+                elif isinstance(animal, animals.RoosterBoss):
+                    level.son_boss_poulet_mort.play()
+                elif isinstance(animal, animals.BossFemme):
+                    level.son_femme_mort.play()
                 x = animal.rect.centerx
                 y = animal.rect.bottom +40 
                 speedboosts.append(SpeedBoost((x, y)))
 
             elif random.randint(1, 100) <= 20:
                     heals.append(Heal(animal.rect.center))
-
-    if level_number == 6 and isinstance(level, Level6):
-        shield_spawn_timer -= 1
-        if shield_spawn_timer <= 0:
-            x = random.randint(100, LEVEL_WIDTH - 100)
-            level.shield_powerups.append(Shield((x, -50)))
-            shield_spawn_timer = random.randint(180, 600)
-
+            if animal.take_damage(1) and animal.health > 0:
+                if isinstance(animal, animals.PigBoss):
+                    level.son_boss_cochon_degat.play()    
+                    
+        if level_number == 6 and isinstance(level, Level6):
+            shield_spawn_timer -= 1
+            if shield_spawn_timer <= 0:
+                x = random.randint(100, LEVEL_WIDTH - 100)
+                level.shield_powerups.append(Shield((x, -50)))
+                shield_spawn_timer = random.randint(180, 600)
+                    
     # Affichage des heals
     for heal in heals[:]:
         heal.update()
@@ -285,6 +319,7 @@ while running:
         if wolf.rect.colliderect(heal.rect):
             wolf.health = min(wolf.health + 1, wolf.max_health)
             heals.remove(heal)
+            level.son_heal.play()
 
         # Disparition naturelle
         elif heal.timer <= 0:
@@ -301,6 +336,7 @@ while running:
             speedboost_timer = 600  # 10 secondes
             wolf.move_speed = 10
             wolf.jump = lambda: setattr(wolf, 'jump_speed', -20) or setattr(wolf, 'jumping', True)
+            level.power_up_loup.play()
 
         elif boost.timer <= 0:
             speedboosts.remove(boost)
@@ -314,6 +350,7 @@ while running:
             if wolf.rect.colliderect(shield.rect):
                 level.shield_powerups.remove(shield)
                 shield_timer = 600  # 10 secondes d’invincibilité
+                level.power_up_loup.play()
 
             elif shield.timer <= 0:
                 level.shield_powerups.remove(shield)
@@ -420,6 +457,8 @@ while running:
         elif level_number == 5:
             level = Level5(LEVEL_WIDTH, LEVEL_HEIGHT)
         elif level_number == 6:
+            pygame.time.wait(1000)
+            level.fond_jeu.stop()
             level = Level6(LEVEL_WIDTH, LEVEL_HEIGHT)
         elif level_number > 6:
             if shield_timer > 0:
@@ -434,13 +473,22 @@ while running:
                     shield.draw(screen, camera_offset, camera_y)
 
             # === FIN DU JEU ===
-            victory_img = pygame.image.load("data/fond_win.png").convert()
-            victory_img = pygame.transform.scale(victory_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
-            screen.blit(victory_img, (0, 0))
-            pygame.display.flip()
-            pygame.time.wait(5000)
-            running = False
-            break
+            level.son_boss.stop()
+            level.fond_jeu.stop()
+            level.victoire.play()
+            waiting = True
+            while waiting:
+                victory_img = pygame.image.load("data/fond_win.png").convert()
+                victory_img = pygame.transform.scale(victory_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
+                screen.blit(victory_img, (0, 0))
+                #pygame.time.wait(5000)
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        waiting = False
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            waiting = False
+                pygame.display.flip()
 
         # Reset du niveau
         platforms = level.platforms
@@ -454,6 +502,9 @@ while running:
     if wolf.health <= 0:
         game_over = True
         running = False
+        level.fond_jeu.stop()
+        level.son_boss.stop()
+        level.game_over.play(-1)
 
     pygame.display.flip()
     clock.tick(60)
@@ -477,5 +528,4 @@ if game_over:
 
         pygame.display.flip()
         clock.tick(60)
-
-pygame.quit()
+    pygame.quit()

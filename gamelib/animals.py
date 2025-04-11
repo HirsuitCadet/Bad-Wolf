@@ -196,7 +196,7 @@ class RoosterBoss(Animal):
         self.image = self.right_images[0]
         self.rect = self.image.get_rect(topleft=pos)
 
-    def update(self, wolf_rect=None, wolf=None, effects=None, current_frame=None):
+    def update(self, wolf_rect=None, wolf=None, effects=None, level=None, current_frame=None):
         if not self.alive:
             for egg in self.projectiles:
                 egg.update()
@@ -286,7 +286,7 @@ class RoosterBoss(Animal):
             egg.update()
             if wolf and egg.rect.colliderect(wolf.rect) and not egg.exploding:
                 egg.explode()
-                wolf.projectile_damage()
+                wolf.projectile_damage(level)
 
         self.projectiles = [egg for egg in self.projectiles if not egg.finished]
         #################################################
@@ -340,7 +340,10 @@ class Dog(Animal):
 
         # Choix de l'image selon état
         if self.attacking and self.attack_delay > 0:
-            self.image = self.jump_prep if self.direction > 0 else self.jump_prep_left
+            if self.direction > 0:
+                self.image = self.jump_prep 
+            else :
+                self.jump_prep_left
         elif self.target_x is not None and not self.attacking:
             self.image = self.jump_air if self.direction > 0 else self.jump_air_left
         else:
@@ -492,8 +495,8 @@ class PigBoss(Animal):
             self.flash_timer -= 1
 
 #CODE FAIT AVEC CHATGPT############################
-    def crush_effect(self, wolf):
-        wolf.take_damage(self)
+    def crush_effect(self, wolf, level):
+        wolf.take_damage(self, level)
         wolf.move_speed = 3
         wolf.jump = lambda: setattr(wolf, 'jump_speed', -6) or setattr(wolf, 'jumping', True)
         wolf.slowed_timer = 180  # 3 secondes
