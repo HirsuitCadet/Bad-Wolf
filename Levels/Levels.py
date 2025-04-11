@@ -134,4 +134,5 @@ class Levels():
         self.rooster_shoot_right = pygame.image.load("data/boss_poulet_tire2.png").convert_alpha()
         self.rooster_shoot_left = pygame.transform.flip(self.rooster_shoot_right, True, False)
 
-        self.aura_image = pygame.image.load("data/moon.png").convert_alpha()
+        self.moon_image = pygame.image.load("data/moon.png").convert_alpha()
+        self.aura_image = pygame.image.load("data/aura.png").convert_alpha()

@@ -35,7 +35,7 @@ level = Level6(LEVEL_WIDTH, LEVEL_HEIGHT)
 platforms = level.platforms
 liste_animals = level.animals
 background_image = pygame.transform.scale(level.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
-level_number = 1
+level_number = 6
 
 # Entities
 wolf = Wolf((150, 700))
@@ -47,6 +47,7 @@ bloods = []
 egg_explosions = []
 frame_counter = 0
 shield_timer = 0
+shield_spawn_timer = random.randint(180, 180)
 
 #moving_platforms = [
  #   MovingPlatform(400, 600, 120, 20, dx=2, range_x=200) 
@@ -170,7 +171,7 @@ while running:
                         bloods.append(BloodEffect(animal.rect.center))
                     wolf.jump_speed = -8  # rebond
 
-                elif wolf.hit_timer <= 0 and not animal.attack_zone_active:
+                elif wolf.hit_timer <= 0 and not animal.attack_zone_active and shield_timer <=0:
                         wolf.take_damage(animal)
             # Zone d’impact (attaque au sol)
             if animal.attack_zone_active:
@@ -269,10 +270,11 @@ while running:
                     heals.append(Heal(animal.rect.center))
 
     if level_number == 6 and isinstance(level, Level6):
-        if random.randint(1, 1) == 1:
-            x = random.randint(200, LEVEL_WIDTH - 200)
-            print("Le power-up a spawn en x : ",x)
+        shield_spawn_timer -= 1
+        if shield_spawn_timer <= 0:
+            x = random.randint(100, LEVEL_WIDTH - 100)
             level.shield_powerups.append(Shield((x, -50)))
+            shield_spawn_timer = random.randint(180, 180)
 
     # Affichage des heals
     for heal in heals[:]:
@@ -446,7 +448,7 @@ while running:
 
         # Reset du niveau
         platforms = level.platforms
-        liste_animals = level.animalszd
+        liste_animals = level.animals
         background_image = pygame.transform.scale(level.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
         wolf.rect.topleft = (150, 700)
         camera_offset = 0
