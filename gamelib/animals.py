@@ -304,9 +304,14 @@ class RoosterBoss(Animal):
         for egg in self.projectiles:
             egg.draw(screen, offset_x, offset_y)
 
-    def set_image(self, new_image):
-        old_midbottom = self.rect.midbottom
-        self.image = new_image
+    def set_image(self, image_or_list):
+        if isinstance(image_or_list, list):
+            image = image_or_list[0]
+        else:
+            image = image_or_list
+
+        old_midbottom = self.rect.midbottom if hasattr(self, "rect") else (0, 0)
+        self.image = image
         self.rect = self.image.get_rect(midbottom=old_midbottom)
         
 class Dog(Animal):
@@ -502,6 +507,13 @@ class PigBoss(Animal):
         self.flee_timer = 15
         self.direction *= -1
 
+    def get_blood_position(self):
+        visible_height = self.image.get_height()
+        x = self.rect.left + self.image.get_width() // 2
+        y = self.rect.top + visible_height - visible_height // 4
+        return (x, y)
+
+
 class FinalBoss(Animal):
     def __init__(self, pos, start_level, end_level, walk_right, walk_left, jump_start_right, jump_start_left, jump_air_right, jump_air_left, attack_ground_right, attack_ground_left):
         # 3 phases : rouge, orange, violet
@@ -678,9 +690,14 @@ class FinalBoss(Animal):
 
         #######################################################################
 
-    def set_image(self, new_image):
-        old_midbottom = self.rect.midbottom
-        self.image = new_image
+    def set_image(self, image_or_list):
+        if isinstance(image_or_list, list):
+            image = image_or_list[0]
+        else:
+            image = image_or_list
+
+        old_midbottom = self.rect.midbottom if hasattr(self, "rect") else (0, 0)
+        self.image = image
         self.rect = self.image.get_rect(midbottom=old_midbottom)
 
     def attack_phase_1(self, wolf):

@@ -66,7 +66,7 @@ class Shield:
     def __init__(self, pos):
         self.image = pygame.image.load("data/moon.png").convert_alpha()
         self.rect = self.image.get_rect(center=pos)
-        self.timer = 600  # reste visible 10s
+        self.timer = 600  # reste visible 10 secondes
         self.gravity = 0.01
         self.fall_speed = 0
         self.on_ground = False
