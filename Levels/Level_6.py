@@ -1,5 +1,7 @@
 import pygame
+import random
 import gamelib.animals as animals
+import gamelib.effects as effects
 from Levels.Levels import Levels
 
 class Level6(Levels):
@@ -26,7 +28,7 @@ class Level6(Levels):
             pygame.Rect(2250, 670, 180, 20),
             pygame.Rect(2550, 770, 200, 20),   
         ]
-
+        self.shield_powerups = []
         self.animals = self.load_animals(0, level_width)
 
     def load_animals(self, start_level, end_level,):

@@ -5,7 +5,7 @@ class BloodEffect:
     def __init__(self, pos):
         self.images = [
             pygame.image.load(f"data/blood{i}.png").convert_alpha()
-            for i in range(1, 5)  # sang1.png à sang4.png
+            for i in range(1, 5) 
         ]
         self.frame = 0
         self.frame_timer = 0
@@ -26,6 +26,8 @@ class BloodEffect:
     def draw(self, screen, offset_x, offset_y):
         screen.blit(self.image, self.rect.move(-offset_x, -offset_y))
 
+# Code fait avec ChatGPT
+#################################################
 class EggProjectile:
     def __init__(self, pos, direction, explosion_frames, frame_duration=6):
         self.image = pygame.image.load("data/oeuf.png").convert_alpha()
@@ -69,7 +71,9 @@ class EggProjectile:
             screen.blit(frame, self.rect.move(-offset_x, -offset_y))
         elif not self.exploding:
             screen.blit(self.image, self.rect.move(-offset_x, -offset_y))
+#################################################
 
+#CODE FAIT AVEC CHATGPT######################################
 class HomingProjectile:
     def __init__(self, start_pos, target_pos):
         self.original_image = pygame.image.load("data/claquette.png").convert_alpha()
@@ -110,3 +114,5 @@ class HomingProjectile:
             rotated = pygame.transform.rotate(self.original_image, self.angle)
             new_rect = rotated.get_rect(center=self.rect.center)
             screen.blit(rotated, new_rect.move(-offset_x, -offset_y))
+
+#############################################################
