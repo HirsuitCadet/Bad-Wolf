@@ -104,6 +104,7 @@ class Levels():
         self.boss_attack_ground_left = pygame.transform.flip(self.boss_attack_ground, True, False)
         self.zone_attack_img = pygame.image.load("data/attaque_de_zone.png").convert_alpha()
         self.zone_attack_img = pygame.transform.scale(self.zone_attack_img, (600, 20))
+        self.fork_image = pygame.image.load("data/fourche.png").convert_alpha()
 
         # BossFemme
         self.femme_walk_images = [

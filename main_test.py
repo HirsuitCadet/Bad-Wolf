@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 import gamelib.animals as animals
 from Levels.Levels import Levels
 from Levels.Level_1 import Level1
@@ -149,7 +150,11 @@ while running:
                 camera_shake = 30
             for proj in animal.projectiles:
                 rect, vx, vy = proj
-                pygame.draw.rect(screen, (255, 255, 0), rect.move(-camera_offset, -camera_y))
+                angle = math.degrees(math.atan2(-vy, vx))
+                rotated_fork = pygame.transform.rotate(level.fork_image, angle)
+                rotated_rect = rotated_fork.get_rect(center=rect.center)
+                screen.blit(rotated_fork, rotated_rect.move(-camera_offset, -camera_y))
+
                 if rect.colliderect(wolf.rect) and wolf.hit_timer <= 0:
                     wolf.take_damage(animal)
             loup_above = (
